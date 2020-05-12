@@ -191,7 +191,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 <font color="black">2) Сначала рекомендуется изучить азбуки(катакана и хирагана),</font><br>
 <font color="black">а уже потом слова и кандзи</font><br>
 <font color="black">3) Новые слова и кандзи, которых нет в программе, вы можете</font><br>
-<font color="black">добавить в настройках в главном меню (японская раскладка клавиатуры).</font><br>
+<font color="black">добавить в настройках в главном меню.</font><br>
 <font color="black">4) Если слово или кандзи есть в программе, но не имеет звука или</font><br>
 <font color="black">изображения, вы можете добавить их,</font><br>
 <font color="black">если введёте написание, чтение и значения такими,</font><br>
@@ -240,7 +240,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.statusbar = QtWidgets.QStatusBar(self)
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
-        self.setWindowTitle("Программа для изучения японского языка")
+        self.setWindowTitle("MainWindow")
         self.start_learn_button.setText("Обучение")
         self.start_checking_button.setText("Проверка")
         self.setup_button.setText("Настройка")
@@ -697,9 +697,13 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.can_click = True
 
         def create_new_random_elements(elements_list, current_element):
-            current_random_elements = set(elements_list)
+            new_elements_list = deepcopy(elements_list)
+            shuffle(new_elements_list)
+            current_random_elements = set(new_elements_list)
             current_random_elements.discard(current_element)
-            current_random_elements = list(current_random_elements)[:3]
+            current_random_elements = list(current_random_elements)
+            shuffle(current_random_elements)
+            current_random_elements = current_random_elements[:3]
             current_random_elements.append(current_element)
             shuffle(current_random_elements)
             return current_random_elements
