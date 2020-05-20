@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import sys
 import webbrowser
 import logging
@@ -9,6 +8,11 @@ from time import sleep
 from threading import Thread
 from random import shuffle
 from data import db_session
+from data.models.hiragana import Hiragana
+from data.models.katakana import Katakana
+from data.models.words import Word
+from data.models.kanji import Kanji
+from data.models.users import User
 from PyQt5.QtWidgets import (QLCDNumber, QApplication, QMainWindow, QPushButton, QLabel,
                              QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, )
 from PyQt5.QtGui import QPixmap, QFont
@@ -26,6 +30,10 @@ NEW = 0
 HARD = 2
 CONTINUE = 1
 NUMERABLE = -1
+CLASSES_BY_TYPES_OF_ELEMENTS = {HIRAGANA: Hiragana,
+                                KATAKANA: Katakana,
+                                KANJI: Kanji,
+                                WORDS: Word}
 COUNT_OF_LEARNING = 15  # Количество слов / иероглифов в 1 уроке
 TIME_TO_TEST_FOR_ONE_WORD = 4  # В секундах
 TIME_TO_TEST_FOR_ONE_KANJI = 9  # В секундах
@@ -51,98 +59,30 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.temporary_files = {'sound': None, 'image': None}
         self.path = os.getcwd()  # Путь к текущей папке программы
 
-    def get_words(self, type_of_continue, num_of_lesson=None):
+    @staticmethod
+    def get_lesson_elements_by_type(elements_type, lesson_number=1):
+        """
+        Данная функция принимает в качестве аргументов: тип элемента и номер урока
+        Если номер урока не был указан, то будет выбран 1 урок.
+        Функция возвращат список объектов модели указанного элемента
+        Например:
+        result = get_lesson_elements_by_type(HIRAGANA, 1)
+        result == [Hiragana, Hiragana ...Hiragana]
+        result[0] == Hiragana(id=1, title='あ', reading='А')
+        result[7] == Hiragana(id=7, title='ま', reading='Ма')
+        """
+        class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type)
+        if not class_of_element:
+            logging.error('Type of element not found in classes list')
+            return
         session = db_session.create_session()
-        """Переписать"""
-        if ...:
-            ...
-        elif type_of_continue == NUMERABLE:
-            start_id = COUNT_OF_LEARNING * (num_of_lesson - 1) + 1
-            end_id = COUNT_OF_LEARNING * num_of_lesson
-            words = cursor.execute(f"""SELECT writing, reading, meaning,
-             way_to_image, way_to_sound FROM Words
-             WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        elif type_of_continue == CONTINUE:
-            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-            WHERE title_of_save = {WORDS}""").fetchone()[0])
-            start_id = (num_lesson - 1) * COUNT_OF_LEARNING + 1
-            end_id = start_id + COUNT_OF_LEARNING - 1
-            cursor = self.database.cursor()
-            words = cursor.execute(f"""SELECT writing, reading, meaning,
-            way_to_image, way_to_sound FROM Words
-            WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        else:
-            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-                                WHERE title_of_save = {WORDS}""").fetchone()[0])
-            end_id = num_lesson * COUNT_OF_LEARNING
-            words = cursor.execute(f"""SELECT writing, reading, meaning,
-                        way_to_image, way_to_sound FROM Words
-                        WHERE id <= {end_id}""").fetchall()
-        return words
-
-    def get_kanji(self, type_of_continue, num_of_lesson=None):
-        cursor = self.database.cursor()
-        if type_of_continue == NEW:
-            kanji = cursor.execute("""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
-                     examples, way_to_image, way_to_sound FROM Kanji""").fetchmany(COUNT_OF_LEARNING)
-            cursor = self.database.cursor()
-            cursor.execute(f"""UPDATE Saves
-                    SET value = 1
-                    WHERE title_of_save = {KANJI}""")
-        elif type_of_continue == NUMERABLE:
-            start_id = COUNT_OF_LEARNING * (num_of_lesson - 1) + 1
-            end_id = COUNT_OF_LEARNING * num_of_lesson
-            kanji = cursor.execute(f"""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
-                     examples, way_to_image, way_to_sound FROM Kanji
-                     WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        elif type_of_continue == CONTINUE:
-            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-                    WHERE title_of_save = {KANJI}""").fetchone()[0])
-            start_id = (num_lesson - 1) * COUNT_OF_LEARNING + 1
-            end_id = start_id + COUNT_OF_LEARNING - 1
-            cursor = self.database.cursor()
-            kanji = cursor.execute(f"""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
-                     examples, way_to_image, way_to_sound FROM Kanji
-                    WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        else:
-            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-                                WHERE title_of_save = {KANJI}""").fetchone()[0])
-            end_id = num_lesson * COUNT_OF_LEARNING
-            kanji = cursor.execute(f"""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
-                     examples, way_to_image, way_to_sound FROM Kanji
-                                WHERE id <= {end_id}""").fetchall()
-        return kanji
-
-    def get_kana(self, type_of_kana, type_of_continue, num_of_lesson=None):
-        cursor = self.database.cursor()
-        if type_of_continue == NEW:
-            elements = cursor.execute(f"""SELECT writing, 
-            reading FROM {type_of_kana}""").fetchmany(COUNT_OF_LEARNING)
-            cursor = self.database.cursor()
-            cursor.execute(f"""UPDATE Saves
-            SET value = 1
-            WHERE title_of_save = '{type_of_kana}'""")
-        elif type_of_continue == NUMERABLE:
-            start_id = COUNT_OF_LEARNING * (num_of_lesson - 1) + 1
-            end_id = COUNT_OF_LEARNING * num_of_lesson
-            elements = cursor.execute(f"""SELECT writing, reading FROM {type_of_kana}
-             WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        elif type_of_continue == CONTINUE:
-            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-            WHERE title_of_save = '{type_of_kana}'""").fetchone()[0])
-            start_id = (num_lesson - 1) * COUNT_OF_LEARNING + 1
-            end_id = start_id + COUNT_OF_LEARNING - 1
-            cursor = self.database.cursor()
-            elements = cursor.execute(f"""SELECT writing, reading FROM {type_of_kana}
-            WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
-        else:
-            num_of_lesson = int(cursor.execute(f"""SELECT value FROM Saves
-            WHERE title_of_save = '{type_of_kana}'""").fetchone()[0])
-            end_id = num_of_lesson * COUNT_OF_LEARNING
-            elements = cursor.execute(f"""SELECT writing, reading FROM {type_of_kana}
-                        WHERE id <= {end_id}""").fetchall()
+        start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
+        end_id = COUNT_OF_LEARNING * lesson_number
+        elements = session.query(class_of_element).filter(
+            class_of_element.id >= start_id, class_of_element.id <= end_id).all()
         return elements
 
+    
     def create_small_main_menu_button(self):
         return_button = QPushButton('Меню', self)
         return_button.setGeometry(660, 0, 40, 40)
@@ -182,6 +122,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                     ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
                 except Exception:
                     pass
+
+    def register(self):
+        pass
+
+    def login(self):
+        pass
 
     def answer_of_users_questions(self):
         self.disable_ui()
