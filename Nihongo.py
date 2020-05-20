@@ -2,23 +2,26 @@ import os
 import sqlite3
 import sys
 import webbrowser
+import logging
 from PIL import Image
 from copy import deepcopy
 from time import sleep
 from threading import Thread
 from random import shuffle
+from data import db_session
 from PyQt5.QtWidgets import (QLCDNumber, QApplication, QMainWindow, QPushButton, QLabel,
                              QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, )
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-HIRAGANA = 'Hiragana'
-KATAKANA = 'Katakana'
-KANJI = 'Kanji'
-WORDS = 'Words'
-IMAGE = 'IMG'
-SOUND = 'SND'
+"""Общие константы в программе для обозначения данных категорий"""
+HIRAGANA = 11
+KATAKANA = 12
+KANJI = 13
+WORDS = 14
+IMAGE = 20
+SOUND = 21
 NEW = 0
 HARD = 2
 CONTINUE = 1
@@ -27,6 +30,14 @@ COUNT_OF_LEARNING = 15  # Количество слов / иероглифов �
 TIME_TO_TEST_FOR_ONE_WORD = 4  # В секундах
 TIME_TO_TEST_FOR_ONE_KANJI = 9  # В секундах
 TIME_TO_TEST_FOR_ONE_KANA_SYMBOL = 2  # В секундах
+DB_FILE_NAME = 'Main.sqlite'
+LOG_FILE = 'Log.log'
+
+logging.basicConfig(
+    level=logging.ERROR,
+    filename=LOG_FILE,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
 
 
 class ProgramLearnJapaneseLanguage(QMainWindow):
@@ -36,21 +47,15 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.font_14.setPointSize(14)
         self.font_20 = QFont()
         self.font_20.setPointSize(20)
-        self.setupUi()
-        self.way_to_database = 'MainDatabase.db'
-        self.database = sqlite3.connect(self.way_to_database)
+        db_session.global_init(f'db/{DB_FILE_NAME}')
         self.temporary_files = {'sound': None, 'image': None}
         self.path = os.getcwd()  # Путь к текущей папке программы
 
     def get_words(self, type_of_continue, num_of_lesson=None):
-        cursor = self.database.cursor()
-        if type_of_continue == NEW:
-            words = cursor.execute("""SELECT writing, reading, meaning,
-             way_to_image, way_to_sound FROM Words""").fetchmany(COUNT_OF_LEARNING)
-            cursor = self.database.cursor()
-            cursor.execute("""UPDATE Saves
-            SET value = 1
-            WHERE title_of_save = 'Words'""")
+        session = db_session.create_session()
+        """Переписать"""
+        if ...:
+            ...
         elif type_of_continue == NUMERABLE:
             start_id = COUNT_OF_LEARNING * (num_of_lesson - 1) + 1
             end_id = COUNT_OF_LEARNING * num_of_lesson
@@ -58,8 +63,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
              way_to_image, way_to_sound FROM Words
              WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
         elif type_of_continue == CONTINUE:
-            num_lesson = int(cursor.execute("""SELECT value FROM Saves
-            WHERE title_of_save = 'Words'""").fetchone()[0])
+            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
+            WHERE title_of_save = {WORDS}""").fetchone()[0])
             start_id = (num_lesson - 1) * COUNT_OF_LEARNING + 1
             end_id = start_id + COUNT_OF_LEARNING - 1
             cursor = self.database.cursor()
@@ -67,8 +72,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             way_to_image, way_to_sound FROM Words
             WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
         else:
-            num_lesson = int(cursor.execute("""SELECT value FROM Saves
-                                WHERE title_of_save = 'Words'""").fetchone()[0])
+            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
+                                WHERE title_of_save = {WORDS}""").fetchone()[0])
             end_id = num_lesson * COUNT_OF_LEARNING
             words = cursor.execute(f"""SELECT writing, reading, meaning,
                         way_to_image, way_to_sound FROM Words
@@ -81,9 +86,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             kanji = cursor.execute("""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
                      examples, way_to_image, way_to_sound FROM Kanji""").fetchmany(COUNT_OF_LEARNING)
             cursor = self.database.cursor()
-            cursor.execute("""UPDATE Saves
+            cursor.execute(f"""UPDATE Saves
                     SET value = 1
-                    WHERE title_of_save = 'Kanji'""")
+                    WHERE title_of_save = {KANJI}""")
         elif type_of_continue == NUMERABLE:
             start_id = COUNT_OF_LEARNING * (num_of_lesson - 1) + 1
             end_id = COUNT_OF_LEARNING * num_of_lesson
@@ -91,8 +96,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                      examples, way_to_image, way_to_sound FROM Kanji
                      WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
         elif type_of_continue == CONTINUE:
-            num_lesson = int(cursor.execute("""SELECT value FROM Saves
-                    WHERE title_of_save = 'Kanji'""").fetchone()[0])
+            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
+                    WHERE title_of_save = {KANJI}""").fetchone()[0])
             start_id = (num_lesson - 1) * COUNT_OF_LEARNING + 1
             end_id = start_id + COUNT_OF_LEARNING - 1
             cursor = self.database.cursor()
@@ -100,8 +105,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                      examples, way_to_image, way_to_sound FROM Kanji
                     WHERE id >= {start_id} AND id <= {end_id}""").fetchall()
         else:
-            num_lesson = int(cursor.execute("""SELECT value FROM Saves
-                                WHERE title_of_save = 'Kanji'""").fetchone()[0])
+            num_lesson = int(cursor.execute(f"""SELECT value FROM Saves
+                                WHERE title_of_save = {KANJI}""").fetchone()[0])
             end_id = num_lesson * COUNT_OF_LEARNING
             kanji = cursor.execute(f"""SELECT writing, onyomi_reading, kunyomi_reading, meaning,
                      examples, way_to_image, way_to_sound FROM Kanji
@@ -185,29 +190,29 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         answer_label.setAlignment(Qt.AlignTop)
         answer_label.setGeometry(25, 25, 630, 430)
         text = """
-<font color="black">1) Данна программа позволяет выучить две азбуки японского алфавита,</font><br>
-<font color="black">слова и кандзи.</font><br>
+<font color="black">1) Данна программа позволяет выучить две азбуки японского алфавита,<br>
+слова и кандзи.</font><br>
 <font color="yellow">Но программа не содержит уроков по грамматике японского языка</font><br>
-<font color="black">2) Сначала рекомендуется изучить азбуки(катакана и хирагана),</font><br>
-<font color="black">а уже потом слова и кандзи</font><br>
-<font color="black">3) Новые слова и кандзи, которых нет в программе, вы можете</font><br>
-<font color="black">добавить в настройках в главном меню.</font><br>
-<font color="black">4) Если слово или кандзи есть в программе, но не имеет звука или</font><br>
-<font color="black">изображения, вы можете добавить их,</font><br>
-<font color="black">если введёте написание, чтение и значения такими,</font><br>
-<font color="black">какими они написаны в программе</font><br>
-<font color="black">5) В конце каждого урока вам будет предложено пройти тест,</font><br>
-<font color="black">чтобы перейти к следующему уроку.</font><br>
-<font color="yellow">Чтобы пройти тест вам необходимо допустить менее 1 % ошибок.</font><br>
-<font color="yellow">В тесте из 15 вопросов, следовательно, 0 ошибок.</font><br>
-<font color="yellow">В тесте из 700 вопрос — не более 7 ошибок.</font><br>
-<font color="black">6)　Вы можете пройти тест по всем изученным словам или</font><br>
-<font color="black">иероглифам в пункте "Проверка" главного меню.</font><br>
-<font color="black">Также вы можете повторить любой из изученных уроков и / или</font><br>
-<font color="black">пройти по нему тест заново.</font><br>
+<font color="black">2) Сначала рекомендуется изучить азбуки(катакана и хирагана),<br>
+а уже потом слова и кандзи<br>
+3) Новые слова и кандзи, которых нет в программе, вы можете<br>
+добавить в настройках в главном меню.<br>
+4) Если слово или кандзи есть в программе, но не имеет звука или<br>
+изображения, вы можете добавить их,<br>
+если введёте написание, чтение и значения такими,<br>
+какими они написаны в программе<br>
+5) В конце каждого урока вам будет предложено пройти тест,<br>
+чтобы перейти к следующему уроку.</font><br>
+<font color="yellow">Чтобы пройти тест вам необходимо допустить менее 1 % ошибок.<br>
+В тесте из 15 вопросов, следовательно, 0 ошибок.<br>
+В тесте из 700 вопрос — не более 7 ошибок.</font><br>
+<font color="black">6)　Вы можете пройти тест по всем изученным словам или<br>
+иероглифам в пункте "Проверка" главного меню.<br>
+Также вы можете повторить любой из изученных уроков и / или<br>
+пройти по нему тест заново.</font><br>
 <font color="yellow">Если вы провалите уже пройденный тест, ваш прогресс утерян не будет.</font><br>
-<font color="black">7) Вы всегда можете сбросить свои сохранения для каждого</font><br>
-<font color="black">раздела отдельно, нажав на кнопку "Начать сначала".</font><br>"""
+<font color="black">7) Вы всегда можете сбросить свои сохранения для каждого<br>
+раздела отдельно, нажав на кнопку "Начать сначала".</font><br>"""
         answer_label.setText(text)
         font = QFont()
         font.setPointSize(11)
@@ -839,7 +844,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                 retest_button.setFont(self.font_20)
                 retest_button.setGeometry(50, 200, 600, 40)
                 words = self.get_words(CONTINUE)
-                retest_button.clicked.connect(lambda: self.test_of_learned_elements(type_of_elements, elements, is_upgrading_test))
+                retest_button.clicked.connect(
+                    lambda: self.test_of_learned_elements(type_of_elements, elements, is_upgrading_test))
                 self.enable_ui([retest_button, result_label])
                 self.ui_list.extend([retest_button, result_label])
                 result_label.setText('Вы не прошли тест')
