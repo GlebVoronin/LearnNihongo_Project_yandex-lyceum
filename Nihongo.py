@@ -82,7 +82,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
         return elements
 
-    
+
     def create_small_main_menu_button(self):
         return_button = QPushButton('Меню', self)
         return_button.setGeometry(660, 0, 40, 40)
