@@ -1,23 +1,24 @@
+import logging
 import os
 import sys
 import webbrowser
-import logging
-from PIL import Image
 from copy import deepcopy
-from time import sleep
-from threading import Thread
 from random import shuffle
-from data import db_session
-from data.models.hiragana import Hiragana
-from data.models.katakana import Katakana
-from data.models.words import Word
-from data.models.kanji import Kanji
-from data.models.users import User
+from threading import Thread
+from time import sleep
+
+from PIL import Image
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import (QLCDNumber, QApplication, QMainWindow, QPushButton, QLabel,
                              QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, )
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import QtCore, QtGui, QtWidgets
+
+from data import db_session
+from data.models.hiragana import Hiragana
+from data.models.kanji import Kanji
+from data.models.katakana import Katakana
+from data.models.words import Word
 
 """Общие константы в программе для обозначения данных категорий"""
 HIRAGANA = 11
@@ -51,13 +52,10 @@ logging.basicConfig(
 class ProgramLearnJapaneseLanguage(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.font_14 = QFont()
-        self.font_14.setPointSize(14)
-        self.font_20 = QFont()
-        self.font_20.setPointSize(20)
         db_session.global_init(f'db/{DB_FILE_NAME}')
         self.temporary_files = {'sound': None, 'image': None}
         self.path = os.getcwd()  # Путь к текущей папке программы
+        self.setupUi()
 
     @staticmethod
     def get_lesson_elements_by_type(elements_type, lesson_number=1):
@@ -66,22 +64,21 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         Если номер урока не был указан, то будет выбран 1 урок.
         Функция возвращат список объектов модели указанного элемента
         Например:
-        result = get_lesson_elements_by_type(HIRAGANA, 1)
+        result = get_lesson_elements_by_type(HIRAGANA, lesson_number=2)
         result == [Hiragana, Hiragana ...Hiragana]
         result[0] == Hiragana(id=1, title='あ', reading='А')
         result[7] == Hiragana(id=7, title='ま', reading='Ма')
         """
         class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type)
         if not class_of_element:
-            logging.error('Type of element not found in classes list')
-            return
+            return logging.error('Type of element not found in classes list')
         session = db_session.create_session()
+        # Опрделение id нужных элементов (начиная с последнего, количество за 1 урок)
         start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
         end_id = COUNT_OF_LEARNING * lesson_number
         elements = session.query(class_of_element).filter(
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
         return elements
-
 
     def create_small_main_menu_button(self):
         return_button = QPushButton('Меню', self)
@@ -112,14 +109,14 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         for ui_element in list_of_ui:
             ui_element.setVisible(True)
             ui_element.setEnabled(True)
-            if not isinstance(ui_element, QPushButton):
+            if isinstance(ui_element, QPushButton):
                 try:
-                    ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
+                    ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
                 except Exception:
                     pass
             else:
                 try:
-                    ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
+                    ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
                 except Exception:
                     pass
 
@@ -167,25 +164,29 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.enable_ui([answer_label])
 
     def setupUi(self):
+        self.font_14 = QFont()
+        self.font_14.setPointSize(14)
+        self.font_20 = QFont()
+        self.font_20.setPointSize(20)
         self.resize(700, 450)
         self.setStyleSheet('background-color: rgb(120, 120, 255)')
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.start_learn_button = QPushButton(self.centralwidget)
-        self.start_learn_button.setGeometry(QtCore.QRect(25, 58, 650, 40))
+        self.start_learn_button.setGeometry(25, 58, 650, 40)
         self.start_learn_button.setFont(self.font_14)
         self.start_learn_button.setObjectName("learn")
         self.start_checking_button = QPushButton(self.centralwidget)
-        self.start_checking_button.setGeometry(QtCore.QRect(25, 156, 650, 40))
+        self.start_checking_button.setGeometry(25, 156, 650, 40)
         self.start_checking_button.setFont(self.font_14)
         self.start_checking_button.setObjectName("checking")
         self.setup_button = QPushButton(self.centralwidget)
-        self.setup_button.setGeometry(QtCore.QRect(25, 254, 650, 40))
+        self.setup_button.setGeometry(25, 254, 650, 40)
         self.setup_button.setFont(self.font_14)
         self.setup_button.setObjectName("setup")
         self.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 700, 21))
+        self.menubar.setGeometry(0, 0, 700, 21)
         self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(self)
@@ -208,11 +209,11 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.enable_ui(self.ui_list)
 
     def set_font_for_pyqt_objects(self, objects: list, font: QFont):
-        for object in objects:
-            try:
-                object.setFont(font)
-            except Exception:
-                pass
+        for q_object in objects:
+            if hasattr(q_object, 'setFont'):
+                q_object.setFont(font)
+            else:
+                logging.warning(f'object {q_object.__name__} hasn`t font attribute')
 
     def checking(self):
         self.disable_ui()
