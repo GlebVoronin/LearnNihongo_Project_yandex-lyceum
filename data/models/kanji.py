@@ -10,5 +10,5 @@ class Kanji(SqlAlchemyBase):
     kunyomi_reading = sqlalchemy.Column(sqlalchemy.String, nullable=False, index=True)
     meaning = sqlalchemy.Column(sqlalchemy.String, nullable=False, index=True)
     examples = sqlalchemy.Column(sqlalchemy.String, nullable=True, index=True)
-    way_to_sound = sqlalchemy.Column(sqlalchemy.String, nullable=True, index=True)
-    way_to_image = sqlalchemy.Column(sqlalchemy.String, nullable=True, index=True)
+    path_to_sound = sqlalchemy.Column(sqlalchemy.String, nullable=True, index=True)
+    path_to_image = sqlalchemy.Column(sqlalchemy.String, nullable=True, index=True)

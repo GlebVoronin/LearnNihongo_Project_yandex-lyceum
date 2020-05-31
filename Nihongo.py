@@ -171,28 +171,22 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.resize(700, 450)
         self.setStyleSheet('background-color: rgb(120, 120, 255)')
         self.centralwidget = QtWidgets.QWidget(self)
-        self.centralwidget.setObjectName("centralwidget")
         self.start_learn_button = QPushButton(self.centralwidget)
         self.start_learn_button.setGeometry(25, 58, 650, 40)
         self.start_learn_button.setFont(self.font_14)
-        self.start_learn_button.setObjectName("learn")
         self.start_checking_button = QPushButton(self.centralwidget)
         self.start_checking_button.setGeometry(25, 156, 650, 40)
         self.start_checking_button.setFont(self.font_14)
-        self.start_checking_button.setObjectName("checking")
         self.setup_button = QPushButton(self.centralwidget)
         self.setup_button.setGeometry(25, 254, 650, 40)
         self.setup_button.setFont(self.font_14)
-        self.setup_button.setObjectName("setup")
         self.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(0, 0, 700, 21)
-        self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(self)
-        self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
-        self.setWindowTitle("MainWindow")
+        self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.start_learn_button.setText("Обучение")
         self.start_checking_button.setText("Проверка")
         self.setup_button.setText("Настройка")
@@ -294,11 +288,17 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         words = self.get_words(type_of_continue, num_of_lesson)
         self.test_of_learned_elements(WORDS, words, is_upgrading_test)
 
-    def save_images_or_sounds(self, writing, way, type_symb, type_elem):
+    def save_images_or_sounds(self, writing, way, type_symb, file_type):
+        """
+        Данная функция сохраняет файл по указанном пути
+        return save_images_or_sounds('学校', 'C:\\images\\image_1.png', KANJI, IMAGE)
+        == 'C:\\Programs\\Nihongo\\images_and_sounds\\Kanji\\学校\\image.png'
+        Путь для использования данной программой, исходный файл сохраняется
+        """
         if not os.path.isdir(f'{self.path}\\images_and_sounds\\{type_symb}\\{writing}'):
             os.makedirs(f'{self.path}\\images_and_sounds\\{type_symb}\\{writing}')
         file_format = way.split('\\')[-1].split('.')[-1]
-        if type_elem == IMAGE:
+        if file_type == IMAGE:
             new_image_way = f'images_and_sounds\\{type_symb}\\{writing}\\image.{file_format}'
             self.copy_image_or_sound_to_program_folder(way, new_image_way)
             return new_image_way
@@ -312,53 +312,36 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         onyomi_reading = self.line_edit_of_onyomi_reading.text()
         kunyomi_reading = self.line_edit_of_kunyomi_reading.text()
         meaning = self.line_edit_of_meaning.text()
-        image_way = '' if None else self.temporary_files['image']
-        sound_way = '' if None else self.temporary_files['sound']
-        if sound_way:
-            sound_way = self.save_images_and_sounds(writing, sound_way, KANJI, SOUND)
-        if image_way:
-            image_way = self.save_images_and_sounds(writing, image_way, KANJI, IMAGE)
-        cursor = self.database.cursor()
-        find = cursor.execute(f"""SELECT id FROM Kanji
-        WHERE writing = '{writing}'
-        AND onyomi_reading = '{onyomi_reading}'
-        AND kunyomi_reading = '{kunyomi_reading}'
-        AND meaning = '{meaning}'""").fetchall()
-        if find:
-            if image_way:
-                self.update_images_and_sounds(find, image_way, KANJI, IMAGE)
-            if sound_way:
-                self.update_images_and_sounds(find, sound_way, KANJI, SOUND)
+        path_to_image = self.temporary_files.get('image', default='')
+        path_to_sound = self.temporary_files.get('sound', default='')
+        if path_to_image:
+            path_to_image = self.save_images_or_sounds(writing, path_to_image, KANJI, IMAGE)
+        if path_to_sound:
+            path_to_sound = self.save_images_or_sounds(writing, path_to_sound, KANJI, SOUND)
+        session = db_session.create_session()
+        kanji = session.query(Kanji).filter(Kanji.writing == writing, Kanji.meaning == meaning).first()
+        if not kanji:
+            kanji = Kanji(
+                writing=writing,
+                onyomi_reading=onyomi_reading,
+                kunyomi_reading=kunyomi_reading,
+                meaning=meaning,
+                path_to_image=path_to_image,
+                path_to_sound=path_to_sound
+            )
+            session.add(kanji)
+            session.commit()
+            self.line_edit_of_writing.setText('Добавлено!')
         else:
-            cursor = self.database.cursor()
-            if image_way and sound_way:
-                cursor.execute(f"""INSERT INTO Kanji(writing, onyomi_reading,
-                kunyomi_reading, meaning, way_to_image, way_to_sound)
-                VALUES('{writing}', '{onyomi_reading}',
-                '{kunyomi_reading}', '{meaning}', '{image_way}', '{sound_way}')""")
-            elif image_way:
-                cursor.execute(f"""INSERT INTO Kanji(writing, onyomi_reading,
-                                kunyomi_reading, meaning, way_to_image)
-                                VALUES('{writing}', '{onyomi_reading}',
-                                '{kunyomi_reading}', '{meaning}', '{image_way}')""")
-            elif sound_way:
-                cursor.execute(f"""INSERT INTO Kanji(writing, onyomi_reading,
-                                kunyomi_reading, meaning, way_to_sound)
-                                VALUES('{writing}', '{onyomi_reading}',
-                                '{kunyomi_reading}', '{meaning}', '{sound_way}')""")
-            else:
-                cursor.execute(f"""INSERT INTO Kanji(writing, onyomi_reading,
-                                kunyomi_reading, meaning)
-                                VALUES('{writing}', '{onyomi_reading}',
-                                '{kunyomi_reading}', '{meaning}')""")
-        self.database.commit()
+            self.line_edit_of_writing.setText(
+                'Такой кандзи уже существует, пожалуйста, воспользуйтесь редактированием!'
+            )
         self.disable_ui()
         self.open_setup_menu()
 
     def add_kanji(self):
         self.disable_ui()
         self.create_small_main_menu_button()
-
         info_label_about_kanji_writing = QLabel('Введите написание иероглифа', self)
         info_label_about_kanji_writing.setGeometry(10, 20, 400, 30)
         self.line_edit_of_writing = QLineEdit(self)
@@ -459,18 +442,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
     def listen(self, way_to_sound):
         webbrowser.open(way_to_sound)
-
-    def update_images_and_sounds(self, find_id, way, type_of_symb, type_of_element):
-        if type_of_element == IMAGE:
-            cursor = self.database.cursor()
-            cursor.execute(f"""UPDATE {type_of_symb}
-            SET way_to_image = '{way}'
-            WHERE id = {find_id[0][0]}""").fetchall()
-        if type_of_element == SOUND:
-            cursor = self.database.cursor()
-            cursor.execute(f"""UPDATE {type_of_symb}
-                            SET way_to_sound = '{way}'
-                            WHERE id = {find_id[0]}""").fetchall()
 
     def save_new_word(self):
         writing = self.line_edit_of_writing.text()
