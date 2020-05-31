@@ -101,24 +101,28 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                         self.setup_button, self.answer_button])
 
     def disable_ui(self):
-        for button in self.ui_list:
-            button.setVisible(False)
-            button.setEnabled(False)
+        for ui_item in self.ui_list:
+            ui_item.setVisible(False)
+            ui_item.setEnabled(False)
 
     def enable_ui(self, list_of_ui):
+        """
+        Данная функция активирует видимость элемента пользовательского интерфейса
+        и возможность взаимоодействия с ним
+        Также устанавливает стиль элементов"""
         for ui_element in list_of_ui:
             ui_element.setVisible(True)
             ui_element.setEnabled(True)
+            self.set_style(ui_element)
+
+    @staticmethod
+    def set_style(ui_element):
+        """Функция устанавливает стиль элемента"""
+        if hasattr(ui_element, 'setStyleSheet'):
             if isinstance(ui_element, QPushButton):
-                try:
-                    ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
-                except Exception:
-                    pass
+                ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
             else:
-                try:
-                    ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
-                except Exception:
-                    pass
+                ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
 
     def register(self):
         pass
@@ -207,7 +211,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             if hasattr(q_object, 'setFont'):
                 q_object.setFont(font)
             else:
-                logging.warning(f'object {q_object.__name__} hasn`t font attribute')
+                logging.warning(f'object {q_object} hasn`t font attribute')
 
     def checking(self):
         self.disable_ui()
