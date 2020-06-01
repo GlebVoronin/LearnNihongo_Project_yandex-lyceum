@@ -227,41 +227,53 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.create_small_main_menu_button()
         continue_test_button = QPushButton('Пройти тест по последнему уроку', self)
         continue_test_button.setGeometry(100, 40, 500, 50)
-        continue_test_button.clicked.connect(lambda: self.start_checking_by_type(type_of_checking, CONTINUE))
+        continue_test_button.clicked.connect(
+            lambda: self.start_checking_by_type(type_of_checking, CONTINUE))
 
         def get_lesson(number_of_lesson_object: QSpinBox, function_of_test, type_of_checking):
             number_of_lesson = number_of_lesson_object.value()
-            function_of_test(type_of_checking, number_of_lesson)
+            function_of_test(type_of_checking, NUMERABLE, number_of_lesson)
 
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
         maximum = getattr(self.current_user, f'{type_of_checking}_save', __default=1)
         number_of_lesson_obj.setMaximum(maximum)
+
         past_test_button = QPushButton('Пройти тест по предыдущим урокам', self)
         past_test_button.setGeometry(100, 140, 500, 50)
-        past_test_button.clicked.connect(lambda: get_lesson(number_of_lesson_obj, test, NUMERABLE))
+        past_test_button.clicked.connect(
+            lambda: get_lesson(number_of_lesson_obj, self.start_checking_by_type, NUMERABLE))
         hard_test_button = QPushButton('Начать тест по всему изученному в данном разделе', self)
         hard_test_button.setGeometry(100, 240, 500, 50)
-        hard_test_button.clicked.connect(lambda: test(HARD))
+        hard_test_button.clicked.connect(
+            lambda:self.start_checking_by_type(type_of_checking, HARD))
         view_learned_words = QPushButton('Посмотреть изученное', self)
         view_learned_words.setGeometry(100, 340, 500, 50)
         ui = [continue_test_button, past_test_button, hard_test_button,
               number_of_lesson_obj, view_learned_words]
-        view_learned_words.clicked.connect(lambda: self.view_learned(type_of_checking, ui))
+        view_learned_words.clicked.connect(
+            lambda: self.view_learned(type_of_checking, ui))
 
         self.enable_ui(ui)
         self.ui_list.extend(ui)
 
-    def start_checking_by_type(self, type_of_continue, type_of_checking, num_of_lesson=1):
+    def start_checking_by_type(self, checking_type, lesson_type, lesson_number=1):
         """Метод передаёт необходимые параметры в процесс тестирования
         (возможно этот метод не нужен)"""
-        if type_of_continue == HARD or type_of_continue == CONTINUE:
-            is_upgrading_test = True
+        if self.current_user:
+            if checking_type == HARD or checking_type == CONTINUE:
+                is_upgrading_test = True
+            else:
+                last_lesson = getattr(self.current_user, f'{checking_type}_save', __default=1)
+                if lesson_number == last_lesson:
+                    is_upgrading_test = True
+                else:
+                    is_upgrading_test = False
         else:
             is_upgrading_test = False
-        test_elements = self.get_lesson_elements_by_type(type_of_checking, num_of_lesson)
-        self.test_of_learned_elements(type_of_checking, test_elements, is_upgrading_test)
+        test_elements = self.get_lesson_elements_by_type(checking_type, lesson_type, lesson_number)
+        self.test_of_learned_elements(checking_type, test_elements, is_upgrading_test)
 
     def save_images_or_sounds(self, writing, way, type_symb, file_type):
         """
