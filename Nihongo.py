@@ -261,15 +261,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
     def start_checking_by_type(self, checking_type, lesson_type, lesson_number=1):
         """Метод передаёт необходимые параметры в процесс тестирования
         (возможно этот метод не нужен)"""
-        if self.current_user:
-            if checking_type == HARD or checking_type == CONTINUE:
-                is_upgrading_test = True
-            else:
-                last_lesson = getattr(self.current_user, f'{checking_type}_save', __default=1)
-                if lesson_number == last_lesson:
-                    is_upgrading_test = True
-                else:
-                    is_upgrading_test = False
+        if self.current_user and (checking_type == HARD or checking_type == CONTINUE):
+            is_upgrading_test = True
         else:
             is_upgrading_test = False
         test_elements = self.get_lesson_elements_by_type(checking_type, lesson_type, lesson_number)
