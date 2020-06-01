@@ -27,7 +27,6 @@ KANJI = 'kanji'
 WORDS = 'words'
 IMAGE = 20
 SOUND = 21
-NEW = 0
 HARD = 2
 CONTINUE = 1
 NUMERABLE = -1
@@ -58,28 +57,31 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.path = os.getcwd()  # Путь к текущей папке программы
         self.setupUi()
 
-    @staticmethod
-    def get_lesson_elements_by_type(elements_type, lesson_number=1, all_lessons=False):
+    def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE):
         """
-        Данная функция принимает в качестве аргументов: тип элемента и номер урока
-        Если номер урока не был указан, то будет выбран 1 урок.
+        Данная функция принимает в качестве аргументов: тип элемента и
+        продолжение обучения
+        Если тип обучения не был указан, то будет выбран 1 урок.
         Функция возвращат список объектов модели указанного элемента
         Например:
-        result = get_lesson_elements_by_type(HIRAGANA, lesson_number=2)
+        result = get_lesson_elements_by_type(HIRAGANA, CONTINUE)
         result == [Hiragana, Hiragana ...Hiragana]
         result[0] == Hiragana(id=1, title='あ', reading='А')
         result[7] == Hiragana(id=7, title='ま', reading='Ма')
         """
-        class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type)
+        session = db_session.create_session()
+        if self.current_user:
+            last_lesson = getattr(self.current_user, f'{elements_type}_save')
+        else:  # незарегистрированный пользователь
+            last_lesson = 1
+        if lesson_type == CONTINUE:  # продолжить с последнего сохранения
+            start_id = COUNT_OF_LEARNING * (last_lesson - 1) + 1
+        else:  # все уроки, с самого начала
+            start_id = 1
+        end_id = COUNT_OF_LEARNING * last_lesson
+        class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type, default=None)
         if not class_of_element:
             return logging.error('Type of element not found in classes list')
-        session = db_session.create_session()
-        # Опрделение id нужных элементов (начиная с последнего, количество за 1 урок)
-        if all_lessons:
-            start_id = 1
-        else:
-            start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
-        end_id = COUNT_OF_LEARNING * lesson_number
         elements = session.query(class_of_element).filter(
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
         return elements
@@ -216,7 +218,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.create_main_types_of_learning_button_with_function(self.menu_of_checking)
 
     def menu_of_checking(self, type_of_checking):
-        session = db_session.create_session()
         self.disable_ui()
         self.create_small_main_menu_button()
         continue_test_button = QPushButton('Пройти тест по последнему уроку', self)
@@ -256,38 +257,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             is_upgrading_test = False
         test_elements = self.get_lesson_elements_by_type(type_of_checking, num_of_lesson)
         self.test_of_learned_elements(type_of_checking, test_elements, is_upgrading_test)
-
-    def checking_hiragana(self, type_of_continue, num_of_lesson=None):
-        if type_of_continue == HARD or type_of_continue == CONTINUE:
-            is_upgrading_test = True
-        else:
-            is_upgrading_test = False
-        kana_symbols = self.get_kana(HIRAGANA, type_of_continue, num_of_lesson)
-        self.test_of_learned_elements(HIRAGANA, kana_symbols, is_upgrading_test)
-
-    def checking_katakana(self, type_of_continue, num_of_lesson=None):
-        if type_of_continue == HARD or type_of_continue == CONTINUE:
-            is_upgrading_test = True
-        else:
-            is_upgrading_test = False
-        kana_symbols = self.get_kana(KATAKANA, type_of_continue, num_of_lesson)
-        self.test_of_learned_elements(KATAKANA, kana_symbols, is_upgrading_test)
-
-    def checking_kanji(self, type_of_continue, num_of_lesson=None):
-        if type_of_continue == HARD or type_of_continue == CONTINUE:
-            is_upgrading_test = True
-        else:
-            is_upgrading_test = False
-        kanji = self.get_kanji(type_of_continue, num_of_lesson)
-        self.test_of_learned_elements(KANJI, kanji, is_upgrading_test)
-
-    def checking_words(self, type_of_continue, num_of_lesson=None):
-        if type_of_continue == HARD or type_of_continue == CONTINUE:
-            is_upgrading_test = True
-        else:
-            is_upgrading_test = False
-        words = self.get_words(type_of_continue, num_of_lesson)
-        self.test_of_learned_elements(WORDS, words, is_upgrading_test)
 
     def save_images_or_sounds(self, writing, way, type_symb, file_type):
         """
