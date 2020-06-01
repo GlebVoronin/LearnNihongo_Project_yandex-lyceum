@@ -21,10 +21,10 @@ from data.models.katakana import Katakana
 from data.models.words import Word
 
 """Общие константы в программе для обозначения данных категорий"""
-HIRAGANA = 11
-KATAKANA = 12
-KANJI = 13
-WORDS = 14
+HIRAGANA = 'hiragana'
+KATAKANA = 'katakana'
+KANJI = 'kanji'
+WORDS = 'words'
 IMAGE = 20
 SOUND = 21
 NEW = 0
@@ -54,11 +54,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         super().__init__()
         db_session.global_init(f'db/{DB_FILE_NAME}')
         self.temporary_files = {'sound': None, 'image': None}
+        self.current_user = None
         self.path = os.getcwd()  # Путь к текущей папке программы
         self.setupUi()
 
     @staticmethod
-    def get_lesson_elements_by_type(elements_type, lesson_number=1):
+    def get_lesson_elements_by_type(elements_type, lesson_number=1, all_lessons=False):
         """
         Данная функция принимает в качестве аргументов: тип элемента и номер урока
         Если номер урока не был указан, то будет выбран 1 урок.
@@ -74,7 +75,10 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return logging.error('Type of element not found in classes list')
         session = db_session.create_session()
         # Опрделение id нужных элементов (начиная с последнего, количество за 1 урок)
-        start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
+        if all_lessons:
+            start_id = 1
+        else:
+            start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
         end_id = COUNT_OF_LEARNING * lesson_number
         elements = session.query(class_of_element).filter(
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
@@ -206,44 +210,27 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                         self.start_learn_button, self.answer_button]
         self.enable_ui(self.ui_list)
 
-    def set_font_for_pyqt_objects(self, objects: list, font: QFont):
-        for q_object in objects:
-            if hasattr(q_object, 'setFont'):
-                q_object.setFont(font)
-            else:
-                logging.warning(f'object {q_object} hasn`t font attribute')
-
     def checking(self):
         self.disable_ui()
         self.create_small_main_menu_button()
         self.create_main_types_of_learning_button_with_function(self.menu_of_checking)
 
     def menu_of_checking(self, type_of_checking):
+        session = db_session.create_session()
         self.disable_ui()
         self.create_small_main_menu_button()
-
-        if type_of_checking == HIRAGANA:
-            test = self.checking_hiragana
-        elif type_of_checking == KATAKANA:
-            test = self.checking_katakana
-        elif type_of_checking == KANJI:
-            test = self.checking_kanji
-        else:
-            test = self.checking_words
         continue_test_button = QPushButton('Пройти тест по последнему уроку', self)
         continue_test_button.setGeometry(100, 40, 500, 50)
-        continue_test_button.clicked.connect(lambda: test(CONTINUE))
+        continue_test_button.clicked.connect(lambda: self.start_checking_by_type(type_of_checking, CONTINUE))
 
-        def get_lesson(number_of_lesson_object, function_of_test, type_of_checking):
+        def get_lesson(number_of_lesson_object: QSpinBox, function_of_test, type_of_checking):
             number_of_lesson = number_of_lesson_object.value()
             function_of_test(type_of_checking, number_of_lesson)
 
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
-        cursor = self.database.cursor()
-        maximum = cursor.execute(f"""SELECT value FROM Saves
-                WHERE title_of_save = '{type_of_checking}'""").fetchall()[0][0]
+        maximum = getattr(self.current_user, f'{type_of_checking}_save', __default=1)
         number_of_lesson_obj.setMaximum(maximum)
         past_test_button = QPushButton('Пройти тест по предыдущим урокам', self)
         past_test_button.setGeometry(100, 140, 500, 50)
@@ -259,6 +246,16 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         self.enable_ui(ui)
         self.ui_list.extend(ui)
+
+    def start_checking_by_type(self, type_of_continue, type_of_checking, num_of_lesson=1):
+        """Метод передаёт необходимые параметры в процесс тестирования
+        (возможно этот метод не нужен)"""
+        if type_of_continue == HARD or type_of_continue == CONTINUE:
+            is_upgrading_test = True
+        else:
+            is_upgrading_test = False
+        test_elements = self.get_lesson_elements_by_type(type_of_checking, num_of_lesson)
+        self.test_of_learned_elements(type_of_checking, test_elements, is_upgrading_test)
 
     def checking_hiragana(self, type_of_continue, num_of_lesson=None):
         if type_of_continue == HARD or type_of_continue == CONTINUE:
@@ -586,6 +583,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         info = f'Вам необходимо пройти тест за {all_time_to_test} секунд или быстрее'
         info_label = QLabel(info, self)
         info_label.setGeometry(50, 30, 600, 30)
+        info_label.setFont(self.font_14)
         label_of_element = QLabel('', self)
         label_of_element.setGeometry(50, 70, 600, 40)
         label_of_element.setAlignment(Qt.AlignHCenter)
@@ -789,12 +787,10 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         continue_button = QPushButton('Продолжить', self)
         continue_button.setGeometry(0, 390, 700, 50)
         continue_button.clicked.connect(continue_check)
-
-        ui = [label_of_element, label_of_reading,
-              continue_button, lcd_timer]
-        self.set_font_for_pyqt_objects(ui, self.font_20)
-        ui.extend([info_label, info_of_mistake_label])
-        info_label.setFont(self.font_14)
+        ui = [label_of_element, label_of_reading, continue_button,
+              lcd_timer, info_label, info_of_mistake_label]
+        for ui_element in ui[:5]:
+            ui_element.setFont(self.font_20)
         self.ui_list.extend(ui)
         self.enable_ui(ui)
         element = iter(elements)
