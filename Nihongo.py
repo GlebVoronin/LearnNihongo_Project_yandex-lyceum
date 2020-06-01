@@ -3,6 +3,7 @@ import os
 import sys
 import webbrowser
 from copy import deepcopy
+from shutil import copy2
 from random import shuffle
 from threading import Thread
 from time import sleep
@@ -247,7 +248,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         hard_test_button = QPushButton('Начать тест по всему изученному в данном разделе', self)
         hard_test_button.setGeometry(100, 240, 500, 50)
         hard_test_button.clicked.connect(
-            lambda:self.start_checking_by_type(type_of_checking, HARD))
+            lambda: self.start_checking_by_type(type_of_checking, HARD))
         view_learned_words = QPushButton('Посмотреть изученное', self)
         view_learned_words.setGeometry(100, 340, 500, 50)
         ui = [continue_test_button, past_test_button, hard_test_button,
@@ -280,11 +281,11 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         file_format = way.split('\\')[-1].split('.')[-1]
         if file_type == IMAGE:
             new_image_way = f'images_and_sounds\\{type_symb}\\{writing}\\image.{file_format}'
-            self.copy_image_or_sound_to_program_folder(way, new_image_way)
+            copy2(way, new_image_way)  # копирование без удаления исходного файла
             return new_image_way
         else:
             new_sound_way = f'images_and_sounds\\{type_symb}\\{writing}\\sound.{file_format}'
-            self.copy_image_or_sound_to_program_folder(way, new_sound_way)
+            copy2(way, new_sound_way)  # копирование без удаления исходного файла
             return new_sound_way
 
     def save_new_kanji(self):
@@ -362,25 +363,16 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(ui)
         self.enable_ui(ui)
 
-    def learn_hirigana(self, type_of_continue, num_of_lesson=None):
-        hiragana_symbols = self.get_kana(HIRAGANA, type_of_continue, num_of_lesson)
-        self.temporary_hiragana_symbols = iter(hiragana_symbols)
-        self.create_kana_info(HIRAGANA)
-
-    def learn_katakana(self, type_of_continue, num_of_lesson=None):
-        katakana_symbols = self.get_kana(KATAKANA, type_of_continue, num_of_lesson)
-        self.temporary_katakana_symbols = iter(katakana_symbols)
-        self.create_kana_info(KATAKANA)
-
-    def learn_kanji(self, type_of_continue, num_of_lesson=None):
-        kanji = self.get_kanji(type_of_continue, num_of_lesson)
-        self.temporary_kanji = iter(kanji)
-        self.create_kanji_info()
-
-    def learn_words(self, type_of_continue, num_of_lesson=None):
-        words = self.get_words(type_of_continue, num_of_lesson)
-        self.temporary_words = iter(words)
-        self.create_word_info()
+    def learn(self, element_type, lesson_type, lesson_number=1):
+        info_methods = {
+            HIRAGANA: lambda: self.create_kana_info(HIRAGANA),
+            KATAKANA: lambda: self.create_kana_info(KATAKANA),
+            KANJI: lambda: self.create_kanji_info(),
+            WORDS: lambda: self.create_word_info()
+        }
+        method = info_methods.get(element_type)
+        elements = self.get_lesson_elements_by_type(element_type, lesson_type, lesson_number)
+        self.temporary_elements_for_learn = iter(elements)
 
     def open_setup_menu(self):
         self.disable_ui()
@@ -397,11 +389,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.enable_ui([add_word_button, add_kanji_button])
 
     def copy_image_or_sound_to_program_folder(self, file_name, new_file_name):
-        source = open(file_name, 'rb')
-        current_file = open(new_file_name, 'wb')
-        current_file.write(source.read())
-        source.close()
-        current_file.close()
+        copy2(file_name, new_file_name)
 
     def add_image(self, image_label):
         file_name, pressed = QFileDialog.getOpenFileName(self, 'Выберите изображение', '')
@@ -742,7 +730,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                 retest_button = QPushButton('Пройти тест заново', self)
                 retest_button.setFont(self.font_20)
                 retest_button.setGeometry(50, 200, 600, 40)
-                words = self.get_words(CONTINUE)
                 retest_button.clicked.connect(
                     lambda: self.test_of_learned_elements(type_of_elements, elements, is_upgrading_test))
                 self.enable_ui([retest_button, result_label])
@@ -812,10 +799,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(ui)
         self.enable_ui(ui)
         try:
-            if type_of_kana == KATAKANA:
-                symbol = next(self.temporary_katakana_symbols)
-            else:
-                symbol = next(self.temporary_hiragana_symbols)
+            symbol = next(self.temporary_elements_for_learn)
             writing, reading = symbol
             kana_label.setText(writing)
             transliteration_reading_label.setText(reading)
@@ -823,7 +807,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         except StopIteration:
             self.disable_ui()
 
-            kana_symbols = self.get_kana(type_of_kana, CONTINUE)
+            kana_symbols = self.get_lesson_elements_by_type(type_of_kana, CONTINUE)
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
@@ -909,7 +893,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(ui)
         self.enable_ui(ui)
         try:
-            kanji = next(self.temporary_kanji)
+            kanji = next(self.temporary_elements_for_learn)
             writing, onyomi_reading, kunyomi_reading, meaning, examples, way_to_image, way_to_sound = kanji
             if way_to_image:
                 pixmap = QPixmap(way_to_image)
@@ -932,7 +916,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         except StopIteration:
             self.disable_ui()
 
-            kanji = self.get_kanji(CONTINUE)
+            kanji = self.get_lesson_elements_by_type(KANJI, CONTINUE)
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
@@ -1004,7 +988,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(ui)
         self.enable_ui(ui)
         try:
-            word = next(self.temporary_words)
+            word = next(self.temporary_elements_for_learn)
             writing, reading, meaning, way_to_image, way_to_sound = word
             if way_to_image:
                 pixmap = QPixmap(way_to_image)
@@ -1020,7 +1004,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         except StopIteration:
             self.disable_ui()
 
-            words = self.get_words(CONTINUE)
+            words = self.get_lesson_elements_by_type(WORDS, CONTINUE)
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
