@@ -57,7 +57,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.path = os.getcwd()  # Путь к текущей папке программы
         self.setupUi()
 
-    def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE):
+    def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE, lesson_number=1):
         """
         Данная функция принимает в качестве аргументов: тип элемента и
         продолжение обучения
@@ -69,19 +69,24 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         result[0] == Hiragana(id=1, title='あ', reading='А')
         result[7] == Hiragana(id=7, title='ま', reading='Ма')
         """
-        session = db_session.create_session()
-        if self.current_user:
-            last_lesson = getattr(self.current_user, f'{elements_type}_save')
-        else:  # незарегистрированный пользователь
-            last_lesson = 1
-        if lesson_type == CONTINUE:  # продолжить с последнего сохранения
+
+        # получение номера последнего урока, 1-й урок по умолчанию
+        last_lesson = getattr(self.current_user, f'{elements_type}_save', __default=1)
+        if lesson_type == CONTINUE:  # продолжить с последнего
             start_id = COUNT_OF_LEARNING * (last_lesson - 1) + 1
+        elif lesson_type == NUMERABLE:  # выбранный урок
+            start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
         else:  # все уроки, с самого начала
             start_id = 1
-        end_id = COUNT_OF_LEARNING * last_lesson
+        if lesson_type != NUMERABLE:  # текущий конец
+            end_id = COUNT_OF_LEARNING * last_lesson
+        else:  # конец в выбранном уроке
+            end_id = COUNT_OF_LEARNING * lesson_number
+
         class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type, default=None)
         if not class_of_element:
             return logging.error('Type of element not found in classes list')
+        session = db_session.create_session()
         elements = session.query(class_of_element).filter(
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
         return elements
