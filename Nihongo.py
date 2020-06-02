@@ -38,16 +38,13 @@ CLASSES_BY_TYPES_OF_ELEMENTS = {HIRAGANA: Hiragana,
                                 KANJI: Kanji,
                                 WORD: Word}
 COUNT_OF_LEARNING = 15  # Количество слов / иероглифов в 1 уроке
-TIME_FOR_ONE_ELEMENT = {
+TIME_FOR_ONE_ELEMENT = {  # допустимое время тестирования одного элемента (в секундах)
     HIRAGANA: 2,
     KATAKANA: 2,
     WORD: 4,
     KANJI: 7
 }
-TIME_TO_TEST_FOR_ONE_WORD = 4  # В секундах
-TIME_TO_TEST_FOR_ONE_KANJI = 9  # В секундах
-TIME_TO_TEST_FOR_ONE_KANA_SYMBOL = 2  # В секундах
-ERROR_PERCENT_FOR_TEST = 10
+ERROR_PERCENT_FOR_TEST = 10  # допустимый процент ошибок для зачёта тестирования
 DB_FILE_NAME = 'Main.sqlite'
 LOG_FILE = 'Log.log'
 
@@ -531,27 +528,22 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             session.commit()
             self.current_user = user
 
-    def test_of_learned_elements(self, type_of_elements, elements, is_upgrading_test=False):
+    def test_of_learned_elements(self, element_type, elements, is_upgrading_test=False):
         self.disable_ui()
-        shuffle(elements)  #
+        shuffle(elements)
         if not isinstance(elements, list):  # если элемент всего один
             elements = [elements]
         
         random_elements = deepcopy(elements)
-
-        if type_of_elements == WORD:
+        time_to_one_element = TIME_FOR_ONE_ELEMENT[element_type]
+        if element_type != KANJI:
             random_elements = [element.writing for element in random_elements]
-            time_to_one_element = TIME_TO_TEST_FOR_ONE_WORD
-        elif type_of_elements == HIRAGANA or type_of_elements == KATAKANA:
-            random_elements = [element.writing for element in random_elements]
-            time_to_one_element = TIME_TO_TEST_FOR_ONE_KANA_SYMBOL
-        elif type_of_elements == KANJI:
+        else:
             random_elements = [[], [], []]
             for element in elements:
                 random_elements[0].append(element.writing)
                 random_elements[1].append(element.onyomi_reading)
                 random_elements[2].append(element.kunyomi_reading)
-            time_to_one_element = TIME_TO_TEST_FOR_ONE_KANJI
         all_time_to_test = time_to_one_element * len(elements)
         # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
         self.permissible_mistakes = int(len(elements) * 0.01 * ERROR_PERCENT_FOR_TEST)
@@ -572,7 +564,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         lcd_timer = QLCDNumber(self)
         lcd_timer.setGeometry(325, 0, 50, 30)
-
 
 
         def end_time_function():
