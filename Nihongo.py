@@ -21,6 +21,7 @@ from data.models.kanji import Kanji
 from data.models.katakana import Katakana
 from data.models.users import User
 from data.models.words import Word
+from data.timer import Timer
 
 """Общие константы в программе для обозначения данных категорий"""
 HIRAGANA = 'hiragana'
@@ -437,6 +438,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             path_to_image=path_to_image,
             path_to_sound=path_to_sound
         )
+        session.add(word)
+        session.commit()
         self.disable_ui()
         self.open_setup_menu()
 
@@ -560,24 +563,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         lcd_timer = QLCDNumber(self)
         lcd_timer.setGeometry(325, 0, 50, 30)
 
-        class Timer(Thread):
-            def __init__(self, duration, lcd_object, end_function):
-                super().__init__()
-                self.duration = duration
-                self.lcd_object = lcd_object
-                self.seconds = 0
-                self.is_test_alive = True
-                self.end_function = end_function
 
-            def run(self):
-                while self.duration - self.seconds > 0 and self.is_test_alive:
-                    sleep(1)
-                    self.seconds += 1
-                    seconds_left = self.duration - self.seconds
-                    mintes, seconds = seconds_left // 60, seconds_left % 60
-                    self.lcd_object.display(f'{mintes}:{seconds}')
-                if self.is_test_alive:
-                    self.end_function()
 
         def end_time_function():
             self.can_click = False
