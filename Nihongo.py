@@ -3,8 +3,8 @@ import os
 import sys
 import webbrowser
 from copy import deepcopy
-from shutil import copy2
 from random import shuffle
+from shutil import copy2
 from threading import Thread
 from time import sleep
 
@@ -19,6 +19,7 @@ from data import db_session
 from data.models.hiragana import Hiragana
 from data.models.kanji import Kanji
 from data.models.katakana import Katakana
+from data.models.users import User
 from data.models.words import Word
 
 """Общие константы в программе для обозначения данных категорий"""
@@ -72,7 +73,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         """
 
         # получение номера последнего урока, 1-й урок по умолчанию
-        last_lesson = getattr(self.current_user, f'{elements_type}_save', __default=1)
+        last_lesson = getattr(self.current_user, f'{elements_type}_save', 1)
         if lesson_type == CONTINUE:  # продолжить с последнего
             start_id = COUNT_OF_LEARNING * (last_lesson - 1) + 1
         elif lesson_type == NUMERABLE:  # выбранный урок
@@ -84,7 +85,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         else:  # конец в выбранном уроке
             end_id = COUNT_OF_LEARNING * lesson_number
 
-        class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type, default=None)
+        class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type, None)
         if not class_of_element:
             return logging.error('Type of element not found in classes list')
         session = db_session.create_session()
@@ -128,11 +129,18 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             self.set_style(ui_element)
 
     @staticmethod
-    def set_style(ui_element):
+    def set_style(ui_element, correct_check=False, correct=True):
         """Функция устанавливает стиль элемента"""
         if hasattr(ui_element, 'setStyleSheet'):
             if isinstance(ui_element, QPushButton):
-                ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
+                # нужно отметить правильные и неправильные ответы пользователя
+                if correct_check:
+                    if correct:
+                        ui_element.setStyleSheet('background-color: rgb(0, 255, 0)')
+                    else:
+                        ui_element.setStyleSheet('background-color: rgb(255, 0, 0)')
+                else:
+                    ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
             else:
                 ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
 
@@ -185,7 +193,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.font_20 = QFont()
         self.font_20.setPointSize(20)
         self.resize(700, 450)
-        self.setStyleSheet('background-color: rgb(120, 120, 255)')
+        self.set_style(self)
         self.centralwidget = QtWidgets.QWidget(self)
         self.start_learn_button = QPushButton(self.centralwidget)
         self.start_learn_button.setGeometry(25, 58, 650, 40)
@@ -238,7 +246,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
-        maximum = getattr(self.current_user, f'{type_of_checking}_save', __default=1)
+        maximum = getattr(self.current_user, f'{type_of_checking}_save', 1)
         number_of_lesson_obj.setMaximum(maximum)
 
         past_test_button = QPushButton('Пройти тест по предыдущим урокам', self)
@@ -293,8 +301,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         onyomi_reading = self.line_edit_of_onyomi_reading.text()
         kunyomi_reading = self.line_edit_of_kunyomi_reading.text()
         meaning = self.line_edit_of_meaning.text()
-        path_to_image = self.temporary_files.get('image', default='')
-        path_to_sound = self.temporary_files.get('sound', default='')
+        path_to_image = self.temporary_files.get('image', '')
+        path_to_sound = self.temporary_files.get('sound', '')
         if path_to_image:
             path_to_image = self.save_images_or_sounds(writing, path_to_image, KANJI, IMAGE)
         if path_to_sound:
@@ -370,11 +378,13 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             KANJI: lambda: self.create_kanji_info(),
             WORDS: lambda: self.create_word_info()
         }
-        method = info_methods.get(element_type)
         elements = self.get_lesson_elements_by_type(element_type, lesson_type, lesson_number)
         self.temporary_elements_for_learn = iter(elements)
+        learning_method = info_methods.get(element_type)
+        learning_method()
 
     def open_setup_menu(self):
+        """Доработать!!!!!!!!!!!!!"""
         self.disable_ui()
         self.create_small_main_menu_button()
 
@@ -387,9 +397,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         add_word_button.clicked.connect(self.add_word)
         add_kanji_button.clicked.connect(self.add_kanji)
         self.enable_ui([add_word_button, add_kanji_button])
-
-    def copy_image_or_sound_to_program_folder(self, file_name, new_file_name):
-        copy2(file_name, new_file_name)
 
     def add_image(self, image_label):
         file_name, pressed = QFileDialog.getOpenFileName(self, 'Выберите изображение', '')
@@ -408,42 +415,28 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             sound_label.setText('Звук добавлен')
             sound_label.setFont(self.font_14)
 
-    def listen(self, way_to_sound):
+    @staticmethod
+    def listen(way_to_sound):
         webbrowser.open(way_to_sound)
 
     def save_new_word(self):
         writing = self.line_edit_of_writing.text()
         reading = self.line_edit_of_reading.text()
         meaning = self.line_edit_of_meaning.text()
-        image_way = '' if None else self.temporary_files['image']
-        sound_way = '' if None else self.temporary_files['sound']
-        if sound_way:
-            sound_way = self.save_images_or_sounds(writing, sound_way, KANJI, SOUND)
-        if image_way:
-            image_way = self.save_images_or_sounds(writing, image_way, KANJI, IMAGE)
-        cursor = self.database.cursor()
-        find = cursor.execute(f"""SELECT id FROM Words
-        WHERE writing = '{writing}' AND reading = '{reading}' AND meaning = '{meaning}'""").fetchall()
-        if find:
-            if image_way:
-                self.update_images_and_sounds(find, image_way, WORDS, IMAGE)
-            if sound_way:
-                self.update_images_and_sounds(find, sound_way, WORDS, SOUND)
-        else:
-            cursor = self.database.cursor()
-            if image_way and sound_way:
-                cursor.execute(f"""INSERT INTO Words(writing, reading, meaning, way_to_image, way_to_sound)
-                VALUES('{writing}', '{reading}', '{meaning}', '{image_way}', '{sound_way}')""")
-            elif image_way:
-                cursor.execute(f"""INSERT INTO Words(writing, reading, meaning, way_to_image)
-                            VALUES('{writing}', '{reading}', '{meaning}', '{image_way}')""")
-            elif sound_way:
-                cursor.execute(f"""INSERT INTO Words(writing, reading, meaning, way_to_sound)
-                            VALUES('{writing}', '{reading}', '{meaning}', '{sound_way}')""")
-            else:
-                cursor.execute(f"""INSERT INTO Words(writing, reading, meaning)
-                            VALUES('{writing}', '{reading}', '{meaning}')""")
-        self.database.commit()
+        path_to_image = self.temporary_files.get('image', '')
+        path_to_sound = self.temporary_files.get('sound', '')
+        if path_to_image:
+            path_to_image = self.save_images_or_sounds(writing, path_to_image, WORDS, IMAGE)
+        if path_to_sound:
+            path_to_sound = self.save_images_or_sounds(writing, path_to_sound, WORDS, SOUND)
+        session = db_session.create_session()
+        word = Word(
+            writing=writing,
+            reading=reading,
+            meaning=meaning,
+            path_to_image=path_to_image,
+            path_to_sound=path_to_sound
+        )
         self.disable_ui()
         self.open_setup_menu()
 
@@ -488,59 +481,65 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
     def check_answer(self, correct_answer, buttons, mistakes_left_label):
         if not self.checked and self.can_click:
-            if self.sender().text() == correct_answer:
-                self.sender().setStyleSheet('QPushButton {background-color: rgb(0, 255, 0);}')
+            button = self.sender()
+            if button.text() == correct_answer:
+                self.set_style(button, correct_check=True, correct=True)
             else:
                 self.permissible_mistakes -= 1
                 mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
                 for button in buttons:
                     if button.text() == correct_answer:
-                        button.setStyleSheet('QPushButton {background-color: rgb(0, 255, 0);}')
+                        self.set_style(button, correct_check=True, correct=True)
                     else:
-                        button.setStyleSheet('QPushButton {background-color: rgb(255, 0, 0);}')
+                        self.set_style(button, correct_check=True, correct=False)
             self.checked = True
 
     def check_answer_of_kanji(self, correct_answers, buttons, mistakes_left_label):
         for step in range(3):
             if not self.checked[step] and self.can_click and self.sender() in buttons[step]:
-                if self.sender().text() == correct_answers[step]:
-                    self.sender().setStyleSheet('QPushButton {background-color: rgb(0, 255, 0);}')
+                button = self.sender()
+                if button.text() == correct_answers[step]:
+                    self.set_style(button, correct_check=True, correct=True)
                 else:
                     self.kanji_mistakes += 1
                     for button in buttons[step]:
                         if button.text() == correct_answers[step]:
-                            button.setStyleSheet('QPushButton {background-color: rgb(0, 255, 0);}')
+                            self.set_style(button, correct_check=True, correct=True)
                         else:
-                            button.setStyleSheet('QPushButton {background-color: rgb(255, 0, 0);}')
+                            self.set_style(button, correct_check=True, correct=False)
                 self.checked[step] = True
-        if self.kanji_mistakes and self.checked[0] and self.checked[1] and self.checked[2]:
+        if self.kanji_mistakes and all(self.checked):
             self.permissible_mistakes -= 1
             mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
 
     def update_progress(self, type_of_learning):
-        cursor = self.database.cursor()
-        cursor.execute(f"""UPDATE Saves
-        SET value = value + 1
-        WHERE title_of_save = '{type_of_learning}'""").fetchall()
-        self.database.commit()
+        if self.current_user:
+            session = db_session.create_session()
+            user = session.query(User).filter(User.id == self.current_user.id).first()
+            current = getattr(self.current_user, f'{type_of_learning}_save', 1)
+            setattr(user, f'{type_of_learning}_save', current + 1)
+            session.commit()
+            self.current_user = user
 
     def test_of_learned_elements(self, type_of_elements, elements, is_upgrading_test=False):
         self.disable_ui()
         shuffle(elements)
 
         random_elements = deepcopy(elements)
-        if not isinstance(elements, list):
+        if not isinstance(elements, list):  # если элемент всего один
             elements = [elements]
         if type_of_elements == WORDS:
-            random_elements = [element[2] for element in random_elements]
+            random_elements = [element.writing for element in random_elements]
             time_to_one_element = TIME_TO_TEST_FOR_ONE_WORD
         elif type_of_elements == HIRAGANA or type_of_elements == KATAKANA:
-            random_elements = [element[1] for element in random_elements]
+            random_elements = [element.writing for element in random_elements]
             time_to_one_element = TIME_TO_TEST_FOR_ONE_KANA_SYMBOL
         elif type_of_elements == KANJI:
-            random_elements = [[element[1] for element in random_elements],
-                               [element[2] for element in random_elements],
-                               [element[3] for element in random_elements]]
+            random_elements = [[], [], []]
+            for element in elements:
+                random_elements[0].append(element.writing)
+                random_elements[1].append(element.onyomi_reading)
+                random_elements[2].append(element.kunyomi_reading)
             time_to_one_element = TIME_TO_TEST_FOR_ONE_KANJI
         all_time_to_test = time_to_one_element * len(elements)
         self.permissible_mistakes = int(len(elements) // 100)
