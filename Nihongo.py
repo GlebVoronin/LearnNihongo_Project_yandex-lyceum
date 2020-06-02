@@ -27,7 +27,7 @@ from data.timer import Timer
 HIRAGANA = 'hiragana'
 KATAKANA = 'katakana'
 KANJI = 'kanji'
-WORDS = 'words'
+WORD = 'words'
 IMAGE = 20
 SOUND = 21
 HARD = 2
@@ -36,11 +36,18 @@ NUMERABLE = -1
 CLASSES_BY_TYPES_OF_ELEMENTS = {HIRAGANA: Hiragana,
                                 KATAKANA: Katakana,
                                 KANJI: Kanji,
-                                WORDS: Word}
+                                WORD: Word}
 COUNT_OF_LEARNING = 15  # Количество слов / иероглифов в 1 уроке
+TIME_FOR_ONE_ELEMENT = {
+    HIRAGANA: 2,
+    KATAKANA: 2,
+    WORD: 4,
+    KANJI: 7
+}
 TIME_TO_TEST_FOR_ONE_WORD = 4  # В секундах
 TIME_TO_TEST_FOR_ONE_KANJI = 9  # В секундах
 TIME_TO_TEST_FOR_ONE_KANA_SYMBOL = 2  # В секундах
+ERROR_PERCENT_FOR_TEST = 10
 DB_FILE_NAME = 'Main.sqlite'
 LOG_FILE = 'Log.log'
 
@@ -377,7 +384,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             HIRAGANA: lambda: self.create_kana_info(HIRAGANA),
             KATAKANA: lambda: self.create_kana_info(KATAKANA),
             KANJI: lambda: self.create_kanji_info(),
-            WORDS: lambda: self.create_word_info()
+            WORD: lambda: self.create_word_info()
         }
         elements = self.get_lesson_elements_by_type(element_type, lesson_type, lesson_number)
         self.temporary_elements_for_learn = iter(elements)
@@ -427,9 +434,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         path_to_image = self.temporary_files.get('image', '')
         path_to_sound = self.temporary_files.get('sound', '')
         if path_to_image:
-            path_to_image = self.save_images_or_sounds(writing, path_to_image, WORDS, IMAGE)
+            path_to_image = self.save_images_or_sounds(writing, path_to_image, WORD, IMAGE)
         if path_to_sound:
-            path_to_sound = self.save_images_or_sounds(writing, path_to_sound, WORDS, SOUND)
+            path_to_sound = self.save_images_or_sounds(writing, path_to_sound, WORD, SOUND)
         session = db_session.create_session()
         word = Word(
             writing=writing,
@@ -526,12 +533,13 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
     def test_of_learned_elements(self, type_of_elements, elements, is_upgrading_test=False):
         self.disable_ui()
-        shuffle(elements)
-
-        random_elements = deepcopy(elements)
+        shuffle(elements)  #
         if not isinstance(elements, list):  # если элемент всего один
             elements = [elements]
-        if type_of_elements == WORDS:
+        
+        random_elements = deepcopy(elements)
+
+        if type_of_elements == WORD:
             random_elements = [element.writing for element in random_elements]
             time_to_one_element = TIME_TO_TEST_FOR_ONE_WORD
         elif type_of_elements == HIRAGANA or type_of_elements == KATAKANA:
@@ -545,14 +553,16 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                 random_elements[2].append(element.kunyomi_reading)
             time_to_one_element = TIME_TO_TEST_FOR_ONE_KANJI
         all_time_to_test = time_to_one_element * len(elements)
-        self.permissible_mistakes = int(len(elements) // 100)
+        # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
+        self.permissible_mistakes = int(len(elements) * 0.01 * ERROR_PERCENT_FOR_TEST)
+        
         info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         info_of_mistake_label.setGeometry(390, 0, 300, 30)
         info_of_mistake_label.setFont(self.font_14)
-        info = f'Вам необходимо пройти тест за {all_time_to_test} секунд или быстрее'
-        info_label = QLabel(info, self)
-        info_label.setGeometry(50, 30, 600, 30)
-        info_label.setFont(self.font_14)
+        info = f'Вам необходимо пройти тест не более чем за {all_time_to_test} секунд'
+        self.info_label = QLabel(info, self)
+        self.info_label.setGeometry(50, 30, 600, 30)
+        self.info_label.setFont(self.font_14)
         label_of_element = QLabel('', self)
         label_of_element.setGeometry(50, 70, 600, 40)
         label_of_element.setAlignment(Qt.AlignHCenter)
@@ -567,7 +577,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         def end_time_function():
             self.can_click = False
-            info_label.setText('Время вышло')
+            self.info_label.setText('Время вышло')
 
         timer = Timer(all_time_to_test, lcd_timer, end_time_function)
         timer.start()
@@ -586,7 +596,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return current_random_elements
 
         def create_check_question(element):
-            if type_of_elements == WORDS:
+            if type_of_elements == WORD:
                 random_elements_with_current_element = create_new_random_elements(random_elements, element[2])
                 correct_element = element[2]
             elif type_of_elements == KATAKANA or type_of_elements == HIRAGANA:
@@ -598,7 +608,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                                                         create_new_random_elements(random_elements[2], element[3])]
                 correct_element = [element[1], element[2], element[3]]
             label_of_element.setText(element[0])
-            if type_of_elements == WORDS:
+            if type_of_elements == WORD:
                 label_of_reading.setText(element[1])
             if type_of_elements != KANJI:
                 self.checked = False
@@ -739,7 +749,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         continue_button.setGeometry(0, 390, 700, 50)
         continue_button.clicked.connect(continue_check)
         ui = [label_of_element, label_of_reading, continue_button,
-              lcd_timer, info_label, info_of_mistake_label]
+              lcd_timer, self.info_label, info_of_mistake_label]
         for ui_element in ui[:5]:
             ui_element.setFont(self.font_20)
         self.ui_list.extend(ui)
@@ -989,7 +999,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         except StopIteration:
             self.disable_ui()
 
-            words = self.get_lesson_elements_by_type(WORDS, CONTINUE)
+            words = self.get_lesson_elements_by_type(WORD, CONTINUE)
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
@@ -997,7 +1007,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
             checking_button = QPushButton('Пройти тест', self)
             checking_button.setGeometry(50, 100, 600, 50)
-            checking_button.clicked.connect(lambda: self.test_of_learned_elements(WORDS, words, True))
+            checking_button.clicked.connect(lambda: self.test_of_learned_elements(WORD, words, True))
             checking_button.setFont(self.font_20)
             ui = [checking_button, return_to_menu_button]
             self.enable_ui(ui)
@@ -1084,7 +1094,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         kanji_button.clicked.connect(lambda: function(KANJI))
         words_button = QPushButton('Слова', self)
         words_button.setGeometry(50, 290, 600, 40)
-        words_button.clicked.connect(lambda: function(WORDS))
+        words_button.clicked.connect(lambda: function(WORD))
         ui = [hiragana_button, katakana_button,
               kanji_button, words_button]
         self.ui_list.extend(ui)
