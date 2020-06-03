@@ -565,12 +565,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         lcd_timer = QLCDNumber(self)
         lcd_timer.setGeometry(325, 0, 50, 30)
 
-
-        def end_time_function():
-            self.can_click = False
-            self.info_label.setText('Время вышло')
-
-        timer = Timer(all_time_to_test, lcd_timer, end_time_function)
+        timer = Timer(all_time_to_test, lcd_timer, self)
         timer.start()
         self.can_click = True
 
@@ -587,10 +582,10 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return current_random_elements
 
         def create_check_question(element):
-            if type_of_elements == WORD:
+            if element_type == WORD:
                 random_elements_with_current_element = create_new_random_elements(random_elements, element[2])
                 correct_element = element[2]
-            elif type_of_elements == KATAKANA or type_of_elements == HIRAGANA:
+            elif element_type == KATAKANA or element_type == HIRAGANA:
                 random_elements_with_current_element = create_new_random_elements(random_elements, element[1])
                 correct_element = element[1]
             else:
@@ -599,9 +594,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                                                         create_new_random_elements(random_elements[2], element[3])]
                 correct_element = [element[1], element[2], element[3]]
             label_of_element.setText(element[0])
-            if type_of_elements == WORD:
+            if element_type == WORD:
                 label_of_reading.setText(element[1])
-            if type_of_elements != KANJI:
+            if element_type != KANJI:
                 self.checked = False
                 first_button = QPushButton('', self)
                 first_button.setGeometry(0, 150, 700, 50)
@@ -693,18 +688,18 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             result_label.setFont(self.font_20)
             if self.permissible_mistakes >= 0:
                 if is_upgrading_test:
-                    self.update_progress(type_of_elements)
+                    self.update_progress(element_type)
                     result_label.setText('Вы прошли тест и открыли новый урок')
                 else:
                     result_label.setText('Вы прошли тест')
                 continue_learning_button = QPushButton('Начать новый урок', self)
                 continue_learning_button.setFont(self.font_20)
                 continue_learning_button.setGeometry(50, 200, 600, 40)
-                if type_of_elements == HIRAGANA:
+                if element_type == HIRAGANA:
                     learn = self.learn_hirigana
-                elif type_of_elements == KATAKANA:
+                elif element_type == KATAKANA:
                     learn = self.learn_katakana
-                elif type_of_elements == KANJI:
+                elif element_type == KANJI:
                     learn = self.learn_kanji
                 else:
                     learn = self.learn_words
@@ -717,7 +712,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                 retest_button.setFont(self.font_20)
                 retest_button.setGeometry(50, 200, 600, 40)
                 retest_button.clicked.connect(
-                    lambda: self.test_of_learned_elements(type_of_elements, elements, is_upgrading_test))
+                    lambda: self.test_of_learned_elements(element_type, elements, is_upgrading_test))
                 self.enable_ui([retest_button, result_label])
                 self.ui_list.extend([retest_button, result_label])
                 result_label.setText('Вы не прошли тест')
@@ -725,7 +720,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         def continue_check():
             try:
                 current_element = next(element)
-                if type_of_elements != KANJI:
+                if element_type != KANJI:
                     if not self.checked:
                         self.permissible_mistakes -= 1
                 else:
