@@ -1,5 +1,5 @@
 from copy import deepcopy
-from random import shuffle
+from random import shuffle, choices
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
@@ -11,11 +11,15 @@ from data.timer import Timer
 class Test(QMainWindow):
     def __init__(self, element_type, elements, is_upgrading):
         super().__init__()
+        shuffle(elements)
         self.element_type = element_type
-        if not isinstance(elements, list):
-            elements = [elements]
         self.elements = elements
+        self.one_element_time = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
+        self.all_time = self.one_element_time * len(elements)
         self.upgrade = is_upgrading
+        # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
+        self.permissible_mistakes = int(len(elements) * 0.01 * Nihongo.ERROR_PERCENT_FOR_TEST)
+        self.can_click = True
         self.setupUi()
         self.start_test()
 
@@ -23,29 +27,13 @@ class Test(QMainWindow):
         self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.resize(700, 450)
         Nihongo.set_style(self)
-
-    def start_test(self):
-        shuffle(self.elements)
-        random_elements = deepcopy(elements)
-        time_to_one_element = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
-        if element_type != Nihongo.KANJI:
-            random_elements = [element.title for element in random_elements]
-        else:
-            random_elements = [[], [], []]
-            for element in elements:
-                random_elements[0].append(element.title)
-                random_elements[1].append(element.onyomi_reading)
-                random_elements[2].append(element.kunyomi_reading)
-        all_time_to_test = time_to_one_element * len(elements)
-        # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
-        self.permissible_mistakes = int(len(elements) * 0.01 * Nihongo.ERROR_PERCENT_FOR_TEST)
         info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         info_of_mistake_label.setGeometry(390, 0, 300, 30)
         info_of_mistake_label.setFont(self.font_14)
-        info = f'Вам необходимо пройти тест не более чем за {all_time_to_test} секунд'
-        self.info_label = QLabel(info, self)
-        self.info_label.setGeometry(50, 30, 600, 30)
-        self.info_label.setFont(self.font_14)
+        info = f'Вам необходимо пройти тест не более чем за {self.all_time} секунд'
+        info_label = QLabel(info, self)
+        info_label.setGeometry(50, 30, 600, 30)
+        info_label.setFont(self.font_14)
         label_of_element = QLabel('', self)
         label_of_element.setGeometry(50, 70, 600, 40)
         label_of_element.setAlignment(Qt.AlignHCenter)
@@ -54,21 +42,32 @@ class Test(QMainWindow):
         label_of_reading.setAlignment(Qt.AlignHCenter)
         lcd_timer = QLCDNumber(self)
         lcd_timer.setGeometry(325, 0, 50, 30)
-        timer = Timer(all_time_to_test, lcd_timer, self)
+        timer = Timer(self.all_time, lcd_timer, self)
         timer.start()
-        self.can_click = True
 
-        def create_new_random_elements(elements_list, current_element):
-            new_elements_list = deepcopy(elements_list)
-            shuffle(new_elements_list)
-            current_random_elements = set(new_elements_list)
-            current_random_elements.discard(current_element)
-            current_random_elements = list(current_random_elements)
-            shuffle(current_random_elements)
-            current_random_elements = current_random_elements[:3]
-            current_random_elements.append(current_element)
-            shuffle(current_random_elements)
-            return current_random_elements
+    @staticmethod
+    def select_elements_for_question(elements, current_element):
+        """
+        elements: list
+        current_element: (Hiragana, Katakana, Kanji или Word
+        Возвращает список (list) из 4-х элементов, включая current_element,
+        являющимся правильным ответом на тест
+        """
+        temporary = set(elements)
+        temporary.discard(current_element)
+        temporary = list(temporary)
+        wrong_elements = choices(temporary, k=3)
+        result = (wrong_elements + current_element)
+        shuffle(result)
+        return result
+
+    def start_test(self):
+
+
+
+
+
+
 
         def create_check_question(element):
             if element_type == Nihongo.WORD:
