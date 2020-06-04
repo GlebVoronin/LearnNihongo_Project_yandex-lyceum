@@ -19,29 +19,19 @@ class Test(QMainWindow):
 
     def setupUi(self):
         self.setWindowTitle("Программа для помощи в изучении японского языка")
+        self.resize(700, 450)
+        Nihongo.set_style(self)
 
     def start_test(self):
-        pass
-
-    def stop_test(self):
-        pass
-
-    def continue_test(self):
-        pass
-
-    def test_of_learned_elements(self, element_type, elements, is_upgrading_test=False):
-        self.disable_ui()
-        shuffle(elements)
-        if not isinstance(elements, list):  # если элемент всего один
-            elements = [elements]
+        shuffle(self.elements)
         random_elements = deepcopy(elements)
         time_to_one_element = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
         if element_type != Nihongo.KANJI:
-            random_elements = [element.writing for element in random_elements]
+            random_elements = [element.title for element in random_elements]
         else:
             random_elements = [[], [], []]
             for element in elements:
-                random_elements[0].append(element.writing)
+                random_elements[0].append(element.title)
                 random_elements[1].append(element.onyomi_reading)
                 random_elements[2].append(element.kunyomi_reading)
         all_time_to_test = time_to_one_element * len(elements)
@@ -239,3 +229,11 @@ class Test(QMainWindow):
         element = iter(elements)
         current_element = next(element)
         create_check_question(current_element)
+
+    def stop_test(self):
+        pass
+
+    def continue_test(self):
+        pass
+
+
