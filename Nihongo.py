@@ -502,7 +502,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.setVisible(False)
         self.setEnabled(False)
         user = self.current_user
-        test = data.test.Test(element_type, elements, is_upgrading_test, user)
+        test = data.test.Test(element_type, elements, is_upgrading_test, user, self)
         test.show()
         self.setVisible(True)
         self.setEnabled(True)
