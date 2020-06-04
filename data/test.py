@@ -8,8 +8,8 @@ from data.timer import Timer
 
 
 class Test(QMainWindow):
-    def __init__(self, element_type, elements, is_upgrading, user):
-        super().__init__()
+    def __init__(self, element_type, elements, is_upgrading, user, parent):
+        super().__init__(parent, Qt.Window)
         shuffle(elements)
         self.element_type = element_type
         self.elements = elements
@@ -50,6 +50,7 @@ class Test(QMainWindow):
         self.label_of_reading = QLabel('', self)
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
+        self.label_of_reading.setFont(Nihongo.FONT_20)
 
         # создание кнопок для ответов пользователя
         if self.element_type != Nihongo.KANJI:
