@@ -8,11 +8,12 @@ from data.timer import Timer
 
 
 class Test(QMainWindow):
-    def __init__(self, element_type, elements, is_upgrading):
+    def __init__(self, element_type, elements, is_upgrading, user):
         super().__init__()
         shuffle(elements)
         self.element_type = element_type
         self.elements = elements
+        self.current_user = user
         self.one_element_time = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
         self.all_time = self.one_element_time * len(elements)
         self.upgrade = is_upgrading
@@ -23,6 +24,11 @@ class Test(QMainWindow):
         if element_type == Nihongo.KANJI:
             self.kanji_mistakes = 0
         self.buttons = []
+        self.elements_iterator = iter(self.elements)
+        lcd_timer = QLCDNumber(self)
+        lcd_timer.setGeometry(325, 0, 50, 30)
+        self.timer = Timer(self.all_time, lcd_timer, self)
+        self.timer.start()
         self.setupUi()
         self.start_test()
 
@@ -99,122 +105,95 @@ class Test(QMainWindow):
         else:
             self.kanji_mistakes = 0
             for index, button in enumerate(self.buttons):
-                if index < 4:
+                if index < 4:  # кнопки с 0 по 3
                     button.setText(question_elements[index].onyomi_reading)
                 elif index < 8:
                     button.setText(question_elements[index].kunyomi_reading)
                 else:
                     button.setText(question_elements[index].meaning)
-
-
-
+                button.clicked.connect(
+                    lambda: self.check_answer_of_kanji(current_element, self.buttons))
 
     def start_test(self):
-        lcd_timer = QLCDNumber(self)
-        lcd_timer.setGeometry(325, 0, 50, 30)
-        timer = Timer(self.all_time, lcd_timer, self)
-        timer.start()
+        continue_button = QPushButton('Продолжить', self)
+        continue_button.setGeometry(0, 390, 700, 50)
+        continue_button.clicked.connect(self.continue_test)
+        current_element = next(self.elements_iterator)
+        self.create_question(current_element)
 
-
-
-        def stop_check():
-            self.disable_ui()
-            timer.is_test_alive = False
-            self.create_normal_main_menu_button()
-            result_label = QLabel('', self)
-            result_label.setGeometry(50, 50, 600, 40)
-            result_label.setFont(self.font_20)
-            if self.permissible_mistakes >= 0:
-                if is_upgrading_test:
-                    self.update_progress(element_type)
-                    result_label.setText('Вы прошли тест и открыли новый урок')
-                else:
-                    result_label.setText('Вы прошли тест')
+    def stop_test(self):
+        self.timer.end_function()
+        result_label = QLabel('', self)
+        result_label.setGeometry(50, 50, 600, 40)
+        result_label.setFont(self.font_20)
+        if self.permissible_mistakes >= 0:
+            if self.upgrade:
+                Nihongo.update_progress(self.element_type, self.user)
+                result_label.setText('Вы прошли тест и открыли новый урок')
+            else:
+                result_label.setText('Вы прошли тест')
                 continue_learning_button = QPushButton('Начать новый урок', self)
                 continue_learning_button.setFont(self.font_20)
                 continue_learning_button.setGeometry(50, 200, 600, 40)
-                if element_type == Nihongo.HIRAGANA:
-                    learn = self.learn_hirigana
-                elif element_type == Nihongo.KATAKANA:
-                    learn = self.learn_katakana
-                elif element_type == Nihongo.KANJI:
-                    learn = self.learn_kanji
-                else:
-                    learn = self.learn_words
-                continue_learning_button.clicked.connect(lambda: learn(Nihongo.CONTINUE))
-                self.enable_ui([continue_learning_button, result_label])
-                self.ui_list.extend([continue_learning_button, result_label])
-            else:
-                retest_button = QPushButton('Пройти тест заново', self)
-                retest_button.setFont(self.font_20)
-                retest_button.setGeometry(50, 200, 600, 40)
-                retest_button.clicked.connect(
-                    lambda: self.test_of_learned_elements(element_type, elements, is_upgrading_test))
-                self.enable_ui([retest_button, result_label])
-                self.ui_list.extend([retest_button, result_label])
-                result_label.setText('Вы не прошли тест')
+        else:
+            retest_button = QPushButton('Пройти тест заново', self)
+            retest_button.setFont(self.font_20)
+            retest_button.setGeometry(50, 200, 600, 40)
+            retest_button.clicked.connect(
+                lambda: self.reset())
+            result_label.setText('Вы не прошли тест')
 
-        def continue_check():
-            try:
-                current_element = next(element)
-                if element_type != Nihongo.KANJI:
-                    if not self.checked:
-                        self.permissible_mistakes -= 1
-                else:
-                    if not self.checked[0] or not self.checked[1] or not self.checked[2]:
-                        self.permissible_mistakes -= 1
-                info_of_mistake_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
-                create_check_question(current_element)
-            except Exception:
-                stop_check()
-
-        continue_button = QPushButton('Продолжить', self)
-        continue_button.setGeometry(0, 390, 700, 50)
-        continue_button.clicked.connect(continue_check)
-        ui = [label_of_element, label_of_reading, continue_button,
-              lcd_timer, self.info_label, info_of_mistake_label]
-        for ui_element in ui[:5]:
-            ui_element.setFont(self.font_20)
-        self.ui_list.extend(ui)
-        self.enable_ui(ui)
-        element = iter(elements)
-        current_element = next(element)
-        create_check_question(current_element)
-
-    def stop_test(self):
-        pass
+    def reset(self):
+        self.__init__(self.element_type, self.elements,
+                      self.is_upgrading_test, self.user)
 
     def continue_test(self):
-        pass
+        if self.element_type != Nihongo.KANJI:
+            if not self.checked:
+                self.permissible_mistakes -= 1
+        else:
+            if not all(self.checked):
+                self.permissible_mistakes -= 1
+        try:
+            current_element = next(self.elements_iterator)
+            info_text = f'Прав на ошибку осталось {self.permissible_mistakes}'
+            self.info_of_mistake_label.setText(info_text)
+            self.create_check_question(current_element)
+        except StopIteration:
+            self.stop_check()
+
     def check_answer(self, correct_answer, buttons):
         if not self.checked and self.can_click:
             button = self.sender()
             if button.text() == correct_answer:
-                set_style(button, correct_check=True, correct=True)
+                Nihongo.set_style(button, correct_check=True, correct=True)
             else:
                 self.permissible_mistakes -= 1
                 self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
                 for button in buttons:
                     if button.text() == correct_answer:
-                        set_style(button, correct_check=True, correct=True)
+                        Nihongo.set_style(button, correct_check=True, correct=True)
                     else:
-                        set_style(button, correct_check=True, correct=False)
+                        Nihongo.set_style(button, correct_check=True, correct=False)
             self.checked = True
 
-    def check_answer_of_kanji(self, correct_answers, buttons, mistakes_left_label):
-        for step in range(3):
-            if not self.checked[step] and self.can_click and self.sender() in buttons[step]:
+    def check_answer_of_kanji(self, correct_element, buttons):
+        for index in range(3):
+            correct_answers = {0: correct_element.onyomi_reading,
+                               1: correct_element.kunyomi_reading,
+                               2: correct_element.meaning}
+            if not self.checked[index] and self.can_click:
                 button = self.sender()
-                if button.text() == correct_answers[step]:
-                    set_style(button, correct_check=True, correct=True)
+                if button.text() == correct_answers[index]:
+                    Nihongo.set_style(button, correct_check=True, correct=True)
                 else:
                     self.kanji_mistakes += 1
-                    for button in buttons[step]:
-                        if button.text() == correct_answers[step]:
-                            set_style(button, correct_check=True, correct=True)
+                    for button in buttons[index]:
+                        if button.text() == correct_answers[index]:
+                            Nihongo.set_style(button, correct_check=True, correct=True)
                         else:
-                            set_style(button, correct_check=True, correct=False)
-                self.checked[step] = True
+                            Nihongo.set_style(button, correct_check=True, correct=False)
+                self.checked[index] = True
         if self.kanji_mistakes and all(self.checked):
             self.permissible_mistakes -= 1
-            mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
+            self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
