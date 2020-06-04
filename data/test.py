@@ -51,8 +51,20 @@ class Test(QMainWindow):
             for index in range(4):
                 button = QPushButton('', self)
                 button.setGeometry(0, x, 700, 50)
+                button.setFont(Nihongo.FONT_20)
                 x += 60
                 self.buttons.append(button)
+        else:
+            x = 150
+            y = 0
+            for index in range(12):
+                button = QPushButton('', self)
+                button.setGeometry(y, x, 233, 50)
+                button.setFont(Nihongo.FONT_20)
+                x += 60
+                self.buttons.append(button)
+                if index % 4 == 0:
+                    y += 233
         Nihongo.enable_ui(self.buttons)
 
     @staticmethod
@@ -78,75 +90,22 @@ class Test(QMainWindow):
             self.label_of_reading.setText(current_element.reading)
 
         question_elements = self.select_elements_for_question(self.elements, current_element)
+
         if self.element_type != Nihongo.KANJI:
             for index, button in enumerate(self.buttons):
                 button.setText(question_elements[index].meaning)
                 button.clicked.connect(
                     lambda: self.check_answer(current_element, self.buttons))
-            for button in buttons:
-                button.clicked.connect(
-                    lambda: self.check_answer(correct_element, buttons, info_of_mistake_label))
-                button.setFont(self.font_20)
-            else:
-                self.kanji_mistakes = 0
-                self.checked = [False, False, False]
-                first_button = QPushButton('', self)
-                first_button.setGeometry(0, 150, 233, 50)
-                second_button = QPushButton('', self)
-                second_button.setGeometry(0, 210, 233, 50)
-                third_button = QPushButton('', self)
-                third_button.setGeometry(0, 270, 233, 50)
-                fourth_button = QPushButton('', self)
-                fourth_button.setGeometry(0, 330, 233, 50)
-                fifth_button = QPushButton('', self)
-                fifth_button.setGeometry(233, 150, 233, 50)
-                sixth_button = QPushButton('', self)
-                sixth_button.setGeometry(233, 210, 233, 50)
-                seventh_button = QPushButton('', self)
-                seventh_button.setGeometry(233, 270, 233, 50)
-                eighth_button = QPushButton('', self)
-                eighth_button.setGeometry(233, 330, 233, 50)
-                nineth_button = QPushButton('', self)
-                nineth_button.setGeometry(466, 150, 233, 50)
-                tenth_button = QPushButton('', self)
-                tenth_button.setGeometry(466, 210, 233, 50)
-                eleventh_button = QPushButton('', self)
-                eleventh_button.setGeometry(466, 270, 233, 50)
-                twelveth_button = QPushButton('', self)
-                twelveth_button.setGeometry(466, 330, 233, 50)
-                ui = [first_button, second_button, third_button, fourth_button,
-                      fifth_button, sixth_button, seventh_button, eighth_button,
-                      nineth_button, tenth_button, eleventh_button, twelveth_button]
-                self.ui_list.extend(ui)
-                self.enable_ui(ui)
-                first_button.setText(random_elements_with_current_element[0][0])
-                second_button.setText(random_elements_with_current_element[0][1])
-                third_button.setText(random_elements_with_current_element[0][2])
-                fourth_button.setText(random_elements_with_current_element[0][3])
-                fifth_button.setText(random_elements_with_current_element[1][0])
-                sixth_button.setText(random_elements_with_current_element[1][1])
-                seventh_button.setText(random_elements_with_current_element[1][2])
-                eighth_button.setText(random_elements_with_current_element[1][3])
-                nineth_button.setText(random_elements_with_current_element[2][0])
-                tenth_button.setText(random_elements_with_current_element[2][1])
-                eleventh_button.setText(random_elements_with_current_element[2][2])
-                twelveth_button.setText(random_elements_with_current_element[2][3])
-                buttons_group_one = ui[:4]
-                buttons_group_two = ui[4:8]
-                buttons_group_three = ui[8:]
-                buttons = [buttons_group_one, buttons_group_two, buttons_group_three]
-                for button in buttons_group_one:
-                    button.clicked.connect(
-                        lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-                    button.setFont(self.font_20)
-                for button in buttons_group_two:
-                    button.clicked.connect(
-                        lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-                    button.setFont(self.font_20)
-                for button in buttons_group_three:
-                    button.clicked.connect(
-                        lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-                    button.setFont(self.font_20)
+        else:
+            self.kanji_mistakes = 0
+            for index, button in enumerate(self.buttons):
+                if index < 4:
+                    button.setText(question_elements[index].onyomi_reading)
+                elif index < 8:
+                    button.setText(question_elements[index].kunyomi_reading)
+                else:
+                    button.setText(question_elements[index].meaning)
+
 
 
 
