@@ -54,7 +54,8 @@ class Test(QMainWindow):
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
         self.label_of_reading.setFont(Nihongo.FONT_20)
 
-        # создание кнопок для ответов пользователя
+    def create_buttons(self):
+        self.buttons = []
         if self.element_type != Nihongo.KANJI:
             x = 150
             for index in range(4):
@@ -93,15 +94,16 @@ class Test(QMainWindow):
         return result
 
     def create_question(self, current_element):
+        self.create_buttons()
         self.checked = False if self.element_type != Nihongo.KANJI else [False, False, False]
         self.label_of_element.setText(current_element.title)
         if self.element_type == Nihongo.WORD:
             self.label_of_reading.setText(current_element.reading)
 
         question_elements = self.select_elements_for_question(self.elements, current_element)
-
         if self.element_type != Nihongo.KANJI:
             for index, button in enumerate(self.buttons):
+                Nihongo.set_style(button)
                 if self.element_type == Nihongo.WORD:
                     button.setText(question_elements[index].meaning)
                 else:
@@ -111,6 +113,7 @@ class Test(QMainWindow):
         else:
             self.kanji_mistakes = 0
             for index, button in enumerate(self.buttons):
+                Nihongo.set_style(button)
                 if index < 4:  # кнопки с 0 по 3
                     button.setText(question_elements[index].onyomi_reading)
                 elif index < 8:
@@ -131,7 +134,7 @@ class Test(QMainWindow):
         self.timer.end_function()
         result_label = QLabel('', self)
         result_label.setGeometry(50, 50, 600, 40)
-        result_label.setFont(self.font_20)
+        result_label.setFont(Nihongo.FONT_20)
         if self.permissible_mistakes >= 0:
             if self.upgrade:
                 Nihongo.update_progress(self.element_type, self.user)
@@ -140,13 +143,13 @@ class Test(QMainWindow):
                 result_label.setText('Вы прошли тест')
         else:
             retest_button = QPushButton('Пройти тест заново', self)
-            retest_button.setFont(self.font_20)
+            retest_button.setFont(Nihongo.FONT_20)
             retest_button.setGeometry(50, 200, 600, 40)
             retest_button.clicked.connect(
                 lambda: self.reset())
             result_label.setText('Вы не прошли тест')
         continue_button = QPushButton('Продолжить', self)
-        continue_button.setFont(self.font_20)
+        continue_button.setFont(Nihongo.FONT_20)
         continue_button.setGeometry(250, 200, 600, 40)
         continue_button.clicked.connect(
             lambda: self.setEnabled(False))
