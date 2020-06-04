@@ -55,6 +55,8 @@ class Test(QMainWindow):
         self.label_of_reading.setFont(Nihongo.FONT_20)
 
     def create_buttons(self):
+        for button in self.buttons:
+            button.destroy()
         self.buttons = []
         if self.element_type != Nihongo.KANJI:
             x = 150
@@ -131,11 +133,12 @@ class Test(QMainWindow):
         self.create_question(current_element)
 
     def stop_test(self):
-        self.timer.end_function()
+        [button.setEnabled(False) for button in self.buttons]
+        [button.setVisible(False) for button in self.buttons]
         result_label = QLabel('', self)
         result_label.setGeometry(50, 50, 600, 40)
         result_label.setFont(Nihongo.FONT_20)
-        if self.permissible_mistakes >= 0:
+        if self.permissible_mistakes >= 0 and self.timer.is_test_alive:
             if self.upgrade:
                 Nihongo.update_progress(self.element_type, self.user)
                 result_label.setText('Вы прошли тест и открыли новый урок')
@@ -148,11 +151,13 @@ class Test(QMainWindow):
             retest_button.clicked.connect(
                 lambda: self.reset())
             result_label.setText('Вы не прошли тест')
+            Nihongo.enable_ui([result_label])
         continue_button = QPushButton('Продолжить', self)
         continue_button.setFont(Nihongo.FONT_20)
-        continue_button.setGeometry(250, 200, 600, 40)
+        continue_button.setGeometry(50, 400, 600, 40)
         continue_button.clicked.connect(
-            lambda: self.setEnabled(False))
+            lambda: self.destroy())
+        Nihongo.enable_ui([continue_button])
 
     def reset(self):
         self.__init__(self.element_type, self.elements,
