@@ -852,7 +852,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
     def start_learn(self):
         self.disable_ui()
         self.create_small_main_menu_button()
-
         self.create_main_types_of_learning_button_with_function(self.learn_menu)
 
 
