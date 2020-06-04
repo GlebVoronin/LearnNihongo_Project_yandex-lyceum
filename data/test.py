@@ -20,6 +20,9 @@ class Test(QMainWindow):
         self.permissible_mistakes = int(len(elements) * 0.01 * Nihongo.ERROR_PERCENT_FOR_TEST)
         self.can_click = True
         self.checked = False if element_type != Nihongo.KANJI else [False, False, False]
+        if element_type == Nihongo.KANJI:
+            self.kanji_mistakes = 0
+        self.buttons = []
         self.setupUi()
         self.start_test()
 
@@ -42,6 +45,16 @@ class Test(QMainWindow):
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
 
+        # создание кнопок для ответов пользователя
+        if self.element_type != Nihongo.KANJI:
+            x = 150
+            for index in range(4):
+                button = QPushButton('', self)
+                button.setGeometry(0, x, 700, 50)
+                x += 60
+                self.buttons.append(button)
+        Nihongo.enable_ui()
+
     @staticmethod
     def select_elements_for_question(elements, current_element):
         """
@@ -59,33 +72,23 @@ class Test(QMainWindow):
         return result
 
     def create_question(self, current_element):
-        question_elements = self.select_elements_for_question(self.elements, current_element)
+        self.checked = False if self.element_type != Nihongo.KANJI else [False, False, False]
+        self.label_of_element.setText(current_element.title)
+        if self.element_type == Nihongo.WORD:
+            self.label_of_reading.setText(current_element.reading)
 
-            label_of_element.setText(element[0])
-            if element_type == Nihongo.WORD:
-                label_of_reading.setText(element[1])
-            if element_type != Nihongo.KANJI:
-                self.checked = False
-                first_button = QPushButton('', self)
-                first_button.setGeometry(0, 150, 700, 50)
-                second_button = QPushButton('', self)
-                second_button.setGeometry(0, 210, 700, 50)
-                third_button = QPushButton('', self)
-                third_button.setGeometry(0, 270, 700, 50)
-                fourth_button = QPushButton('', self)
-                fourth_button.setGeometry(0, 330, 700, 50)
-                ui = [first_button, second_button, third_button, fourth_button]
-                self.ui_list.extend(ui)
-                self.enable_ui(ui)
-                first_button.setText(random_elements_with_current_element[0])
-                second_button.setText(random_elements_with_current_element[1])
-                third_button.setText(random_elements_with_current_element[2])
-                fourth_button.setText(random_elements_with_current_element[3])
-                buttons = [first_button, second_button, third_button, fourth_button]
-                for button in buttons:
-                    button.clicked.connect(
-                        lambda: self.check_answer(correct_element, buttons, info_of_mistake_label))
-                    button.setFont(self.font_20)
+        question_elements = self.select_elements_for_question(self.elements, current_element)
+        if self.element_type != Nihongo.KANJI:
+            for index, button in enumerate(self.buttons):
+                button.setText(question_elements[index].meaning)
+                button.clicked.connect(
+                    lambda: self.check_answer(current_element, self.buttons))
+            self.ui_list.extend(ui)
+            self.enable_ui(ui)
+            for button in buttons:
+                button.clicked.connect(
+                    lambda: self.check_answer(correct_element, buttons, info_of_mistake_label))
+                button.setFont(self.font_20)
             else:
                 self.kanji_mistakes = 0
                 self.checked = [False, False, False]
@@ -226,3 +229,35 @@ class Test(QMainWindow):
 
     def continue_test(self):
         pass
+    def check_answer(self, correct_answer, buttons):
+        if not self.checked and self.can_click:
+            button = self.sender()
+            if button.text() == correct_answer:
+                set_style(button, correct_check=True, correct=True)
+            else:
+                self.permissible_mistakes -= 1
+                self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
+                for button in buttons:
+                    if button.text() == correct_answer:
+                        set_style(button, correct_check=True, correct=True)
+                    else:
+                        set_style(button, correct_check=True, correct=False)
+            self.checked = True
+
+    def check_answer_of_kanji(self, correct_answers, buttons, mistakes_left_label):
+        for step in range(3):
+            if not self.checked[step] and self.can_click and self.sender() in buttons[step]:
+                button = self.sender()
+                if button.text() == correct_answers[step]:
+                    set_style(button, correct_check=True, correct=True)
+                else:
+                    self.kanji_mistakes += 1
+                    for button in buttons[step]:
+                        if button.text() == correct_answers[step]:
+                            set_style(button, correct_check=True, correct=True)
+                        else:
+                            set_style(button, correct_check=True, correct=False)
+                self.checked[step] = True
+        if self.kanji_mistakes and all(self.checked):
+            self.permissible_mistakes -= 1
+            mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
