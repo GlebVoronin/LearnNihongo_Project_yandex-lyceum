@@ -4,6 +4,7 @@ import sys
 import webbrowser
 from shutil import copy2
 
+import werkzeug
 from PIL import Image
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -145,7 +146,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
     def return_to_start_menu(self):
         self.disable_ui()
         enable_ui([self.start_learn_button, self.start_checking_button,
-                        self.setup_button, self.answer_button])
+                   self.setup_button, self.answer_button])
 
     def disable_ui(self):
         for ui_item in self.ui_list:
@@ -518,19 +519,23 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             self.permissible_mistakes -= 1
             mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
 
-    def update_progress(self, type_of_learning):
-        if self.current_user:
-            session = db_session.create_session()
-            user = session.query(User).filter(User.id == self.current_user.id).first()
-            current = getattr(self.current_user, f'{type_of_learning}_save', 1)
-            setattr(user, f'{type_of_learning}_save', current + 1)
-            session.commit()
-            self.current_user = user
+    def load_user(self, login, password, hashed=False):
+        session = db_session.create_session()
+        if not hashed:
+            user = session.query(User).filter(
+                User.login == login,
+                werkzeug.check_password_hash(User.password_hash, password)).first()
+        else:
+            user = session.query(User).filter(
+                User.login == login,
+                User.password_hash == password).first()
+        self.current_user = user
 
     def test_of_learned_elements(self, element_type, elements, is_upgrading_test=False):
         self.setVisible(False)
         self.setEnabled(False)
-        test = data.test.Test(element_type, elements, is_upgrading_test)
+        user = self.current_user
+        test = data.test.Test(element_type, elements, is_upgrading_test, user)
         test.show()
         self.setVisible(True)
         self.setEnabled(True)
@@ -1100,6 +1105,18 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = ProgramLearnJapaneseLanguage()
-    ex.show()
+    main = ProgramLearnJapaneseLanguage()
+    main.show()
+
+
+    def update_progress(type_of_learning, user):
+        if user:
+            session = db_session.create_session()
+            user = session.query(User).filter(User.id == user.id).first()
+            current = getattr(user, f'{type_of_learning}_save', 1)
+            setattr(user, f'{type_of_learning}_save', current + 1)
+            session.commit()
+            main.load_user(user.login, user.password_hash, hashed=True)
+
+
     sys.exit(app.exec_())
