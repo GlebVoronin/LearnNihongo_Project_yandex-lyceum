@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import (QLCDNumber, QApplication, QMainWindow, QPushButton, QLabel,
-                             QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem, )
+                             QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem)
 
 from data import db_session
 from data.models.hiragana import Hiragana
@@ -22,6 +22,7 @@ from data.models.katakana import Katakana
 from data.models.users import User
 from data.models.words import Word
 from data.timer import Timer
+from data.test import Test
 
 """Общие константы в программе для обозначения данных категорий"""
 HIRAGANA = 'hiragana'
@@ -529,6 +530,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             self.current_user = user
 
     def test_of_learned_elements(self, element_type, elements, is_upgrading_test=False):
+        test = Test(element_type, elements, is_upgrading_test)
+        test.show()
         self.disable_ui()
         shuffle(elements)
         if not isinstance(elements, list):  # если элемент всего один

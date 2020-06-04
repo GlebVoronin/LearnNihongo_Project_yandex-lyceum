@@ -4,7 +4,7 @@ from random import shuffle
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
 
-from Nihongo import TIME_FOR_ONE_ELEMENT, ERROR_PERCENT_FOR_TEST, HIRAGANA, KANJI, KATAKANA, WORD
+import Nihongo
 from data.timer import Timer
 
 
@@ -35,8 +35,8 @@ class Test(QMainWindow):
         if not isinstance(elements, list):  # если элемент всего один
             elements = [elements]
         random_elements = deepcopy(elements)
-        time_to_one_element = TIME_FOR_ONE_ELEMENT[element_type]
-        if element_type != KANJI:
+        time_to_one_element = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
+        if element_type != Nihongo.KANJI:
             random_elements = [element.writing for element in random_elements]
         else:
             random_elements = [[], [], []]
@@ -46,7 +46,7 @@ class Test(QMainWindow):
                 random_elements[2].append(element.kunyomi_reading)
         all_time_to_test = time_to_one_element * len(elements)
         # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
-        self.permissible_mistakes = int(len(elements) * 0.01 * ERROR_PERCENT_FOR_TEST)
+        self.permissible_mistakes = int(len(elements) * 0.01 * Nihongo.ERROR_PERCENT_FOR_TEST)
         info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         info_of_mistake_label.setGeometry(390, 0, 300, 30)
         info_of_mistake_label.setFont(self.font_14)
@@ -79,10 +79,10 @@ class Test(QMainWindow):
             return current_random_elements
 
         def create_check_question(element):
-            if element_type == WORD:
+            if element_type == Nihongo.WORD:
                 random_elements_with_current_element = create_new_random_elements(random_elements, element[2])
                 correct_element = element[2]
-            elif element_type == KATAKANA or element_type == HIRAGANA:
+            elif element_type == Nihongo.KATAKANA or element_type == Nihongo.HIRAGANA:
                 random_elements_with_current_element = create_new_random_elements(random_elements, element[1])
                 correct_element = element[1]
             else:
@@ -91,9 +91,9 @@ class Test(QMainWindow):
                                                         create_new_random_elements(random_elements[2], element[3])]
                 correct_element = [element[1], element[2], element[3]]
             label_of_element.setText(element[0])
-            if element_type == WORD:
+            if element_type == Nihongo.WORD:
                 label_of_reading.setText(element[1])
-            if element_type != KANJI:
+            if element_type != Nihongo.KANJI:
                 self.checked = False
                 first_button = QPushButton('', self)
                 first_button.setGeometry(0, 150, 700, 50)
@@ -192,15 +192,15 @@ class Test(QMainWindow):
                 continue_learning_button = QPushButton('Начать новый урок', self)
                 continue_learning_button.setFont(self.font_20)
                 continue_learning_button.setGeometry(50, 200, 600, 40)
-                if element_type == HIRAGANA:
+                if element_type == Nihongo.HIRAGANA:
                     learn = self.learn_hirigana
-                elif element_type == KATAKANA:
+                elif element_type == Nihongo.KATAKANA:
                     learn = self.learn_katakana
-                elif element_type == KANJI:
+                elif element_type == Nihongo.KANJI:
                     learn = self.learn_kanji
                 else:
                     learn = self.learn_words
-                continue_learning_button.clicked.connect(lambda: learn(CONTINUE))
+                continue_learning_button.clicked.connect(lambda: learn(Nihongo.CONTINUE))
                 self.enable_ui([continue_learning_button, result_label])
                 self.ui_list.extend([continue_learning_button, result_label])
             else:
@@ -216,7 +216,7 @@ class Test(QMainWindow):
         def continue_check():
             try:
                 current_element = next(element)
-                if element_type != KANJI:
+                if element_type != Nihongo.KANJI:
                     if not self.checked:
                         self.permissible_mistakes -= 1
                 else:
