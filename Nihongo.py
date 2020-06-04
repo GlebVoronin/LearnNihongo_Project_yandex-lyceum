@@ -110,6 +110,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         session = db_session.create_session()
         elements = session.query(class_of_element).filter(
             class_of_element.id >= start_id, class_of_element.id <= end_id).all()
+        if not isinstance(elements, list):
+            elements = [elements]  # type(elements) == 'list'
         return elements
 
     def create_small_main_menu_button(self):
