@@ -13,6 +13,7 @@ class Test(QMainWindow):
         shuffle(elements)
         self.element_type = element_type
         self.elements = elements
+        self.parent_widget = parent
         self.current_user = user
         self.one_element_time = Nihongo.TIME_FOR_ONE_ELEMENT[element_type]
         self.all_time = self.one_element_time * len(elements)
@@ -37,9 +38,9 @@ class Test(QMainWindow):
         self.resize(700, 450)
         Nihongo.set_style(self)
 
-        self.info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
-        self.info_of_mistake_label.setGeometry(390, 0, 300, 30)
-        self.info_of_mistake_label.setFont(Nihongo.FONT_14)
+        self.mistakes_left_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
+        self.mistakes_left_label.setGeometry(390, 0, 300, 30)
+        self.mistakes_left_label.setFont(Nihongo.FONT_14)
         info = f'Вам необходимо пройти тест не более чем за {self.all_time} секунд'
         self.info_label = QLabel(info, self)
         self.info_label.setGeometry(50, 30, 600, 30)
@@ -47,6 +48,7 @@ class Test(QMainWindow):
         self.label_of_element = QLabel('', self)
         self.label_of_element.setGeometry(50, 70, 600, 40)
         self.label_of_element.setAlignment(Qt.AlignHCenter)
+        self.label_of_element.setFont(Nihongo.FONT_20)
         self.label_of_reading = QLabel('', self)
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
@@ -152,7 +154,7 @@ class Test(QMainWindow):
 
     def reset(self):
         self.__init__(self.element_type, self.elements,
-                      self.is_upgrading_test, self.user)
+                      self.is_upgrading_test, self.user, self.parent_widget)
 
     def continue_test(self):
         if self.element_type != Nihongo.KANJI:
@@ -164,8 +166,8 @@ class Test(QMainWindow):
         try:
             current_element = next(self.elements_iterator)
             info_text = f'Прав на ошибку осталось {self.permissible_mistakes}'
-            self.info_of_mistake_label.setText(info_text)
-            self.create_check_question(current_element)
+            self.mistakes_left_label.setText(info_text)
+            self.create_question(current_element)
         except StopIteration:
             self.stop_check()
 
