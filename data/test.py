@@ -53,7 +53,7 @@ class Test(QMainWindow):
                 button.setGeometry(0, x, 700, 50)
                 x += 60
                 self.buttons.append(button)
-        Nihongo.enable_ui()
+        Nihongo.enable_ui(self.buttons)
 
     @staticmethod
     def select_elements_for_question(elements, current_element):
@@ -83,8 +83,6 @@ class Test(QMainWindow):
                 button.setText(question_elements[index].meaning)
                 button.clicked.connect(
                     lambda: self.check_answer(current_element, self.buttons))
-            self.ui_list.extend(ui)
-            self.enable_ui(ui)
             for button in buttons:
                 button.clicked.connect(
                     lambda: self.check_answer(correct_element, buttons, info_of_mistake_label))

@@ -41,6 +41,10 @@ TIME_FOR_ONE_ELEMENT = {  # допустимое время тестирован
     KANJI: 7
 }
 ERROR_PERCENT_FOR_TEST = 10  # допустимый процент ошибок для зачёта тестирования
+FONT_14 = QFont()
+FONT_14.setPointSize(14)
+FONT_20 = QFont()
+FONT_20.setPointSize(20)
 DB_FILE_NAME = 'Main.sqlite'
 LOG_FILE = 'Log.log'
 
@@ -134,7 +138,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
         return_to_menu_button.setGeometry(50, 100, 600, 50)
         return_to_menu_button.clicked.connect(self.return_to_start_menu)
-        return_to_menu_button.setFont(self.font_20)
+        return_to_menu_button.setFont(FONT_20)
         self.ui_list.append(return_to_menu_button)
         enable_ui([return_to_menu_button])
 
@@ -192,21 +196,17 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         enable_ui([answer_label])
 
     def setupUi(self):
-        self.font_14 = QFont()
-        self.font_14.setPointSize(14)
-        self.font_20 = QFont()
-        self.font_20.setPointSize(20)
         self.resize(700, 450)
         self.centralwidget = QtWidgets.QWidget(self)
         self.start_learn_button = QPushButton(self.centralwidget)
         self.start_learn_button.setGeometry(25, 58, 650, 40)
-        self.start_learn_button.setFont(self.font_14)
+        self.start_learn_button.setFont(FONT_14)
         self.start_checking_button = QPushButton(self.centralwidget)
         self.start_checking_button.setGeometry(25, 156, 650, 40)
-        self.start_checking_button.setFont(self.font_14)
+        self.start_checking_button.setFont(FONT_14)
         self.setup_button = QPushButton(self.centralwidget)
         self.setup_button.setGeometry(25, 254, 650, 40)
-        self.setup_button.setFont(self.font_14)
+        self.setup_button.setFont(FONT_14)
         self.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(0, 0, 700, 21)
@@ -224,7 +224,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.answer_button = QPushButton('Справка', self)
         self.answer_button.setGeometry(25, 352, 650, 40)
         self.answer_button.clicked.connect(self.answer_of_users_questions)
-        self.answer_button.setFont(self.font_14)
+        self.answer_button.setFont(FONT_14)
         self.ui_list = [self.setup_button, self.start_checking_button,
                         self.start_learn_button, self.answer_button]
         enable_ui(self.ui_list)
@@ -417,7 +417,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         if pressed:
             self.temporary_files['sound'] = file_name
             sound_label.setText('Звук добавлен')
-            sound_label.setFont(self.font_14)
+            sound_label.setFont(FONT_14)
 
     @staticmethod
     def listen(way_to_sound):
@@ -555,11 +555,11 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #
         # info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         # info_of_mistake_label.setGeometry(390, 0, 300, 30)
-        # info_of_mistake_label.setFont(self.font_14)
+        # info_of_mistake_label.setFont(FONT_14)
         # info = f'Вам необходимо пройти тест не более чем за {all_time_to_test} секунд'
         # self.info_label = QLabel(info, self)
         # self.info_label.setGeometry(50, 30, 600, 30)
-        # self.info_label.setFont(self.font_14)
+        # self.info_label.setFont(FONT_14)
         # label_of_element = QLabel('', self)
         # label_of_element.setGeometry(50, 70, 600, 40)
         # label_of_element.setAlignment(Qt.AlignHCenter)
@@ -621,7 +621,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #         buttons = [first_button, second_button, third_button, fourth_button]
         #         for button in buttons:
         #             button.clicked.connect(lambda: self.check_answer(correct_element, buttons, info_of_mistake_label))
-        #             button.setFont(self.font_20)
+        #             button.setFont(FONT_20)
         #     else:
         #         self.kanji_mistakes = 0
         #         self.checked = [False, False, False]
@@ -674,15 +674,15 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #         for button in buttons_group_one:
         #             button.clicked.connect(
         #                 lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-        #             button.setFont(self.font_20)
+        #             button.setFont(FONT_20)
         #         for button in buttons_group_two:
         #             button.clicked.connect(
         #                 lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-        #             button.setFont(self.font_20)
+        #             button.setFont(FONT_20)
         #         for button in buttons_group_three:
         #             button.clicked.connect(
         #                 lambda: self.check_answer_of_kanji(correct_element, buttons, info_of_mistake_label))
-        #             button.setFont(self.font_20)
+        #             button.setFont(FONT_20)
         #
         # def stop_check():
         #     self.disable_ui()
@@ -690,7 +690,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #     self.create_normal_main_menu_button()
         #     result_label = QLabel('', self)
         #     result_label.setGeometry(50, 50, 600, 40)
-        #     result_label.setFont(self.font_20)
+        #     result_label.setFont(FONT_20)
         #     if self.permissible_mistakes >= 0:
         #         if is_upgrading_test:
         #             self.update_progress(element_type)
@@ -698,7 +698,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #         else:
         #             result_label.setText('Вы прошли тест')
         #         continue_learning_button = QPushButton('Начать новый урок', self)
-        #         continue_learning_button.setFont(self.font_20)
+        #         continue_learning_button.setFont(FONT_20)
         #         continue_learning_button.setGeometry(50, 200, 600, 40)
         #         if element_type == HIRAGANA:
         #             learn = self.learn_hirigana
@@ -714,7 +714,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         #
         #     else:
         #         retest_button = QPushButton('Пройти тест заново', self)
-        #         retest_button.setFont(self.font_20)
+        #         retest_button.setFont(FONT_20)
         #         retest_button.setGeometry(50, 200, 600, 40)
         #         retest_button.clicked.connect(
         #             lambda: self.test_of_learned_elements(element_type, elements, is_upgrading_test))
@@ -742,7 +742,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         # ui = [label_of_element, label_of_reading, continue_button,
         #       lcd_timer, self.info_label, info_of_mistake_label]
         # for ui_element in ui[:5]:
-        #     ui_element.setFont(self.font_20)
+        #     ui_element.setFont(FONT_20)
         # self.ui_list.extend(ui)
         # enable_ui(ui)
         # element = iter(elements)
@@ -755,29 +755,29 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         kana_label = QLabel(self)
         kana_label.setGeometry(0, 50, 440, 60)
-        kana_label.setFont(self.font_20)
+        kana_label.setFont(FONT_20)
         kana_label.setAlignment(QtCore.Qt.AlignCenter)
 
         transliteration_reading_label = QLabel(self)
         transliteration_reading_label.setGeometry(0, 160, 440, 60)
-        transliteration_reading_label.setFont(self.font_20)
+        transliteration_reading_label.setFont(FONT_20)
         transliteration_reading_label.setAlignment(QtCore.Qt.AlignCenter)
 
         info_label_about_kana = QLabel(self)
         info_label_about_kana.setGeometry(0, 10, 440, 30)
-        info_label_about_kana.setFont(self.font_14)
+        info_label_about_kana.setFont(FONT_14)
         info_label_about_kana.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_kana.setText('Иероглиф')
 
         info_label_about_read = QLabel(self)
         info_label_about_read.setGeometry(QtCore.QRect(0, 120, 440, 30))
-        info_label_about_read.setFont(self.font_14)
+        info_label_about_read.setFont(FONT_14)
         info_label_about_read.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_read.setText('Чтение (транслитерация на русский)')
 
         kana_next_button = QPushButton('Следующий иероглиф', self)
         kana_next_button.clicked.connect(lambda: self.create_kana_info(type_of_kana))
-        kana_next_button.setFont(self.font_14)
+        kana_next_button.setFont(FONT_14)
         kana_next_button.setGeometry(50, 400, 600, 30)
 
         ui = [kana_label, kana_next_button, info_label_about_kana,
@@ -797,12 +797,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
-            return_to_menu_button.setFont(self.font_20)
+            return_to_menu_button.setFont(FONT_20)
 
             checking_button = QPushButton('Пройти тест', self)
             checking_button.setGeometry(50, 100, 600, 50)
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(type_of_kana, kana_symbols, True))
-            checking_button.setFont(self.font_20)
+            checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
             enable_ui(ui)
             self.ui_list.extend(ui)
@@ -813,7 +813,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         kanji_label = QLabel(self)
         kanji_label.setGeometry(0, 20, 420, 60)
-        kanji_label.setFont(self.font_20)
+        kanji_label.setFont(FONT_20)
         kanji_label.setAlignment(QtCore.Qt.AlignCenter)
 
         kanji_image_label = QLabel(self)
@@ -821,51 +821,51 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         kanji_onyomi_reading_label = QLabel(self)
         kanji_onyomi_reading_label.setGeometry(0, 110, 440, 40)
-        kanji_onyomi_reading_label.setFont(self.font_20)
+        kanji_onyomi_reading_label.setFont(FONT_20)
         kanji_onyomi_reading_label.setAlignment(QtCore.Qt.AlignCenter)
 
         kanji_kunyomi_reading_label = QLabel(self)
         kanji_kunyomi_reading_label.setGeometry(0, 180, 440, 40)
-        kanji_kunyomi_reading_label.setFont(self.font_20)
+        kanji_kunyomi_reading_label.setFont(FONT_20)
         kanji_kunyomi_reading_label.setAlignment(QtCore.Qt.AlignCenter)
 
         kanji_meaning_label = QLabel(self)
         kanji_meaning_label.setGeometry(0, 270, 500, 60)
-        kanji_meaning_label.setFont(self.font_20)
+        kanji_meaning_label.setFont(FONT_20)
         kanji_meaning_label.setAlignment(QtCore.Qt.AlignCenter)
 
         info_label_about_kanji = QLabel(self)
         info_label_about_kanji.setGeometry(0, 0, 440, 18)
-        info_label_about_kanji.setFont(self.font_14)
+        info_label_about_kanji.setFont(FONT_14)
         info_label_about_kanji.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_kanji.setText('Слово')
 
         info_label_about_read_onyomi = QLabel(self)
         info_label_about_read_onyomi.setGeometry(QtCore.QRect(0, 90, 440, 18))
-        info_label_about_read_onyomi.setFont(self.font_14)
+        info_label_about_read_onyomi.setFont(FONT_14)
         info_label_about_read_onyomi.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_read_onyomi.setText('Чтение (онъёми)')
 
         info_label_about_read_kunyomi = QLabel(self)
         info_label_about_read_kunyomi.setGeometry(QtCore.QRect(0, 160, 440, 18))
-        info_label_about_read_kunyomi.setFont(self.font_14)
+        info_label_about_read_kunyomi.setFont(FONT_14)
         info_label_about_read_kunyomi.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_read_kunyomi.setText('Чтение (куннъёми)')
 
         info_label_about_meaning = QLabel(self)
         info_label_about_meaning.setGeometry(0, 230, 440, 30)
-        info_label_about_meaning.setFont(self.font_14)
+        info_label_about_meaning.setFont(FONT_14)
         info_label_about_meaning.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_meaning.setText('Значение')
 
         kanji_reading_button = QPushButton(self)
         kanji_reading_button.setGeometry(441, 280, 240, 40)
-        kanji_reading_button.setFont(self.font_14)
+        kanji_reading_button.setFont(FONT_14)
         kanji_reading_button.setText('Прослушать')
 
         kanji_next_button = QPushButton('Следующий кандзи', self)
         kanji_next_button.clicked.connect(self.create_kanji_info)
-        kanji_next_button.setFont(self.font_14)
+        kanji_next_button.setFont(FONT_14)
         kanji_next_button.setGeometry(50, 400, 600, 30)
 
         kanji_use_examples_list = QListWidget(self)
@@ -906,12 +906,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
-            return_to_menu_button.setFont(self.font_20)
+            return_to_menu_button.setFont(FONT_20)
 
             checking_button = QPushButton('Пройти тест', self)
             checking_button.setGeometry(50, 100, 600, 50)
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(KANJI, kanji, True))
-            checking_button.setFont(self.font_20)
+            checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
             enable_ui(ui)
             self.ui_list.extend(ui)
@@ -922,7 +922,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         word_label = QLabel(self)
         word_label.setGeometry(0, 50, 420, 60)
-        word_label.setFont(self.font_20)
+        word_label.setFont(FONT_20)
         word_label.setAlignment(QtCore.Qt.AlignCenter)
 
         word_image_label = QLabel(self)
@@ -930,40 +930,40 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
         word_hiragana_reading_label = QLabel(self)
         word_hiragana_reading_label.setGeometry(0, 160, 440, 60)
-        word_hiragana_reading_label.setFont(self.font_20)
+        word_hiragana_reading_label.setFont(FONT_20)
         word_hiragana_reading_label.setAlignment(QtCore.Qt.AlignCenter)
 
         word_meaning_label = QLabel(self)
         word_meaning_label.setGeometry(20, 270, 660, 60)
-        word_meaning_label.setFont(self.font_20)
+        word_meaning_label.setFont(FONT_20)
         word_meaning_label.setAlignment(QtCore.Qt.AlignCenter)
 
         info_label_about_word = QLabel(self)
         info_label_about_word.setGeometry(0, 10, 440, 30)
-        info_label_about_word.setFont(self.font_14)
+        info_label_about_word.setFont(FONT_14)
         info_label_about_word.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_word.setText('Слово')
 
         info_label_about_read = QLabel(self)
         info_label_about_read.setGeometry(QtCore.QRect(0, 120, 440, 30))
-        info_label_about_read.setFont(self.font_14)
+        info_label_about_read.setFont(FONT_14)
         info_label_about_read.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_read.setText('Чтение (кана)')
 
         info_label_about_meaning = QLabel(self)
         info_label_about_meaning.setGeometry(0, 230, 440, 30)
-        info_label_about_meaning.setFont(self.font_14)
+        info_label_about_meaning.setFont(FONT_14)
         info_label_about_meaning.setAlignment(QtCore.Qt.AlignCenter)
         info_label_about_meaning.setText('Значение')
 
         word_reading_button = QPushButton(self)
         word_reading_button.setGeometry(441, 340, 240, 40)
-        word_reading_button.setFont(self.font_14)
+        word_reading_button.setFont(FONT_14)
         word_reading_button.setText('Прослушать')
 
         word_next_button = QPushButton('Следующее слово', self)
         word_next_button.clicked.connect(self.create_word_info)
-        word_next_button.setFont(self.font_14)
+        word_next_button.setFont(FONT_14)
         word_next_button.setGeometry(50, 400, 600, 30)
 
         ui = [word_image_label, word_reading_button,
@@ -994,12 +994,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
             return_to_menu_button.setGeometry(50, 100, 600, 50)
             return_to_menu_button.clicked.connect(self.return_to_start_menu)
-            return_to_menu_button.setFont(self.font_20)
+            return_to_menu_button.setFont(FONT_20)
 
             checking_button = QPushButton('Пройти тест', self)
             checking_button.setGeometry(50, 100, 600, 50)
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(WORD, words, True))
-            checking_button.setFont(self.font_20)
+            checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
             enable_ui(ui)
             self.ui_list.extend(ui)
@@ -1027,7 +1027,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             enable_ui(ui_list)
 
         return_button.setGeometry(50, 400, 600, 50)
-        return_button.setFont(self.font_14)
+        return_button.setFont(FONT_14)
         return_button.clicked.connect(lambda: return_to_learn_menu(ui_list))
         enable_ui([return_button, list_widget])
 
