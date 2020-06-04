@@ -39,11 +39,11 @@ class Test(QMainWindow):
 
         self.info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         self.info_of_mistake_label.setGeometry(390, 0, 300, 30)
-        self.info_of_mistake_label.setFont(self.font_14)
+        self.info_of_mistake_label.setFont(Nihongo.FONT_14)
         info = f'Вам необходимо пройти тест не более чем за {self.all_time} секунд'
         self.info_label = QLabel(info, self)
         self.info_label.setGeometry(50, 30, 600, 30)
-        self.info_label.setFont(self.font_14)
+        self.info_label.setFont(Nihongo.FONT_14)
         self.label_of_element = QLabel('', self)
         self.label_of_element.setGeometry(50, 70, 600, 40)
         self.label_of_element.setAlignment(Qt.AlignHCenter)
@@ -85,7 +85,7 @@ class Test(QMainWindow):
         temporary.discard(current_element)
         temporary = list(temporary)
         wrong_elements = choices(temporary, k=3)
-        result = (wrong_elements + current_element)
+        result = (wrong_elements + [current_element])
         shuffle(result)
         return result
 
@@ -99,7 +99,10 @@ class Test(QMainWindow):
 
         if self.element_type != Nihongo.KANJI:
             for index, button in enumerate(self.buttons):
-                button.setText(question_elements[index].meaning)
+                if self.element_type == Nihongo.WORD:
+                    button.setText(question_elements[index].meaning)
+                else:
+                    button.setText(question_elements[index].reading)
                 button.clicked.connect(
                     lambda: self.check_answer(current_element, self.buttons))
         else:
@@ -132,9 +135,6 @@ class Test(QMainWindow):
                 result_label.setText('Вы прошли тест и открыли новый урок')
             else:
                 result_label.setText('Вы прошли тест')
-                continue_learning_button = QPushButton('Начать новый урок', self)
-                continue_learning_button.setFont(self.font_20)
-                continue_learning_button.setGeometry(50, 200, 600, 40)
         else:
             retest_button = QPushButton('Пройти тест заново', self)
             retest_button.setFont(self.font_20)
@@ -142,6 +142,12 @@ class Test(QMainWindow):
             retest_button.clicked.connect(
                 lambda: self.reset())
             result_label.setText('Вы не прошли тест')
+        continue_button = QPushButton('Продолжить', self)
+        continue_button.setFont(self.font_20)
+        continue_button.setGeometry(250, 200, 600, 40)
+        continue_button.clicked.connect(
+            lambda: self.setEnabled(False))
+
 
     def reset(self):
         self.__init__(self.element_type, self.elements,
