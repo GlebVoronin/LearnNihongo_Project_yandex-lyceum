@@ -22,5 +22,6 @@ class Timer(Thread):
             self.end_function()
 
     def end_function(self):
+        self.is_test_alive = False
         self.main_object.can_click = False
         self.main_object.info_label.setText('Время вышло')
