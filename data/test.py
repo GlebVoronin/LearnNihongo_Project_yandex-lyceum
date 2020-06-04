@@ -151,7 +151,6 @@ class Test(QMainWindow):
         continue_button.clicked.connect(
             lambda: self.setEnabled(False))
 
-
     def reset(self):
         self.__init__(self.element_type, self.elements,
                       self.is_upgrading_test, self.user, self.parent_widget)
@@ -169,9 +168,13 @@ class Test(QMainWindow):
             self.mistakes_left_label.setText(info_text)
             self.create_question(current_element)
         except StopIteration:
-            self.stop_check()
+            self.stop_test()
 
-    def check_answer(self, correct_answer, buttons):
+    def check_answer(self, correct_element, buttons):
+        if isinstance(correct_element, Nihongo.Word):
+            correct_answer = correct_element.meaning
+        else:
+            correct_answer = correct_element.reading
         if not self.checked and self.can_click:
             button = self.sender()
             if button.text() == correct_answer:
