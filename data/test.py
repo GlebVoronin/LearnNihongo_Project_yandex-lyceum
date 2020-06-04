@@ -27,6 +27,7 @@ class Test(QMainWindow):
         self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.resize(700, 450)
         Nihongo.set_style(self)
+
         info_of_mistake_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         info_of_mistake_label.setGeometry(390, 0, 300, 30)
         info_of_mistake_label.setFont(self.font_14)

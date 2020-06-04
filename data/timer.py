@@ -3,10 +3,10 @@ from time import sleep
 
 
 class Timer(Thread):
-    def __init__(self, duration, lcd_object, main_object):
+    def __init__(self, duration, display_object, main_object):
         super().__init__()
         self.duration = duration
-        self.lcd_object = lcd_object
+        self.display_object = display_object
         self.seconds = 0
         self.is_test_alive = True
         self.main_object = main_object
@@ -17,7 +17,7 @@ class Timer(Thread):
             self.seconds += 1
             seconds_left = self.duration - self.seconds
             minutes, seconds = seconds_left // 60, seconds_left % 60
-            self.lcd_object.display(f'{minutes}:{seconds}')
+            self.display_object.display(f'{minutes}:{seconds}')
         if not self.is_test_alive:
             self.end_function()
 
