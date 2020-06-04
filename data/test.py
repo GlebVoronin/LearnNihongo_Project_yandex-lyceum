@@ -12,6 +12,8 @@ class Test(QMainWindow):
     def __init__(self, element_type, elements, is_upgrading):
         super().__init__()
         self.element_type = element_type
+        if not isinstance(elements, list):
+            elements = [elements]
         self.elements = elements
         self.upgrade = is_upgrading
         self.setupUi()
