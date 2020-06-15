@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from shutil import copy2
 
-import werkzeug
+from werkzeug.security import check_password_hash
 from PIL import Image
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -162,7 +162,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         password = ui['password_line'].text()
         user = session.query(User).filter(
             User.login == login,
-            werkzeug.check_password_hash(User.password_hash, password)
+            check_password_hash(User.password_hash, password)
         ).first()
         if user:
             self.current_user = user
@@ -531,7 +531,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         if not hashed:
             user = session.query(User).filter(
                 User.login == login,
-                werkzeug.check_password_hash(User.password_hash, password)).first()
+                check_password_hash(User.password_hash, password)).first()
         else:
             user = session.query(User).filter(
                 User.login == login,
