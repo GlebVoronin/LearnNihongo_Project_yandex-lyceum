@@ -153,11 +153,51 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             ui_item.setVisible(False)
             ui_item.setEnabled(False)
 
-    def register(self):
+    def register_menu(self):
         pass
 
-    def login(self):
-        pass
+    def login(self, ui: dict):
+        session = db_session.create_session()
+        login = ui['login_line'].text()
+        password = ui['password_line'].text()
+        user = session.query(User).filter(
+            User.login == login,
+            werkzeug.check_password_hash(User.password_hash, password)
+        ).first()
+        if user:
+            self.current_user = user
+            self.start_learn()
+        else:
+            ui['info'].setText('Неверный логин или пароль!')
+
+    def login_menu(self):
+        self.disable_ui()
+        info_label = QLabel('Введите свой логин и пароль', self)
+        info_label.setGeometry(50, 40, 600, 40)
+        info_label.setFont(FONT_14)
+        info_login_label = QLabel('Логин: ', self)
+        info_login_label.setGeometry(10, 120, 60, 60)
+        info_login_label.setFont(FONT_14)
+        info_password_label = QLabel('Пароль: ', self)
+        info_password_label.setGeometry(10, 270, 60, 60)
+        info_password_label.setFont(FONT_14)
+        login_line = QLineEdit(self)
+        login_line.setGeometry(100, 120, 500, 60)
+        login_line.setfont(FONT_20)
+        password_line = QLineEdit(self)
+        password_line.setGeometry(100, 270, 500, 60)
+        password_line.setFont(FONT_20)
+        confirm_button = QPushButton('Подтвердить', self)
+        confirm_button.setGeometry(50, 420, 600, 60)
+        confirm_button.setFont(FONT_20)
+        ui = {'info': info_label,
+              'login_label': info_login_label,
+              'password_label': info_password_label,
+              'login_line': login_line,
+              'password_line': password_line,
+              'confirm': confirm_button}
+        self.ui_list.extend(ui.values())
+        confirm_button.clicked.connect(lambda: self.login(ui))
 
     def answer_of_users_questions(self):
         self.disable_ui()
