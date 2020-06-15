@@ -175,20 +175,19 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         info_label = QLabel('Введите свой логин и пароль', self)
         info_label.setGeometry(50, 40, 600, 40)
         info_label.setFont(FONT_14)
+        info_label.setAlignment(Qt.AlignCenter)
         info_login_label = QLabel('Логин: ', self)
-        info_login_label.setGeometry(10, 120, 60, 60)
+        info_login_label.setGeometry(10, 120, 80, 60)
         info_login_label.setFont(FONT_14)
         info_password_label = QLabel('Пароль: ', self)
-        info_password_label.setGeometry(10, 270, 60, 60)
+        info_password_label.setGeometry(10, 270, 80, 60)
         info_password_label.setFont(FONT_14)
         login_line = QLineEdit(self)
         login_line.setGeometry(100, 120, 500, 60)
-        login_line.setfont(FONT_20)
         password_line = QLineEdit(self)
-        password_line.setGeometry(100, 270, 500, 60)
-        password_line.setFont(FONT_20)
+        password_line.setGeometry(100, 240, 500, 60)
         confirm_button = QPushButton('Подтвердить', self)
-        confirm_button.setGeometry(50, 420, 600, 60)
+        confirm_button.setGeometry(50, 340, 600, 60)
         confirm_button.setFont(FONT_20)
         ui = {'info': info_label,
               'login_label': info_login_label,
@@ -270,6 +269,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                         self.start_learn_button, self.answer_button]
         enable_ui(self.ui_list)
         set_style(self)
+        self.login_menu()
 
     def checking(self):
         self.disable_ui()
