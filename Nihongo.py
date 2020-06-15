@@ -677,7 +677,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
     def create_word_info(self):
         self.disable_ui()
         self.create_small_main_menu_button()
-
         word_label = QLabel(self)
         word_label.setGeometry(0, 50, 420, 60)
         word_label.setFont(FONT_20)
@@ -766,17 +765,11 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.disable_ui()
         self.create_small_main_menu_button()
 
-        cursor = self.database.cursor()
-        max_lesson_number = cursor.execute(f"""SELECT value FROM Saves
-        WHERE title_of_save = '{type_of_learned}'""").fetchall()[0][0]
-        end_id = COUNT_OF_LEARNING * (max_lesson_number - 1)
-        cursor = self.database.cursor()
-        elements = cursor.execute(f"""SELECT writing FROM {type_of_learned}
-        WHERE id <= {end_id}""").fetchall()
+        elements = self.get_lesson_elements_by_type(type_of_learned, lesson_type=HARD)
         list_widget = QListWidget(self)
         list_widget.setGeometry(0, 0, 700, 380)
         for element in elements:
-            list_widget.addItem(QListWidgetItem(f'{element[0]}'))
+            list_widget.addItem(QListWidgetItem(f'{element.title}'))
         return_button = QPushButton('Вернуться к выбору', self)
         self.ui_list.extend([return_button, list_widget])
 
@@ -792,18 +785,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
     def learn_menu(self, type_learn):
         self.disable_ui()
         self.create_small_main_menu_button()
-
-        if type_learn == HIRAGANA:
-            learn = self.learn_hirigana
-        elif type_learn == KATAKANA:
-            learn = self.learn_katakana
-        elif type_learn == KANJI:
-            learn = self.learn_kanji
-        else:
-            learn = self.learn_words
         continue_learn_button = QPushButton('Продолжить', self)
         continue_learn_button.setGeometry(100, 40, 500, 50)
-        continue_learn_button.clicked.connect(lambda: learn(CONTINUE))
+        continue_learn_button.clicked.connect(lambda: self.learn(type_learn, CONTINUE))
 
         def get_lesson(number_of_lesson_obj, function_of_learn, type_of_learn):
             number_of_lesson = number_of_lesson_obj.value()
@@ -812,19 +796,14 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
-        cursor = self.database.cursor()
-        maximum = cursor.execute(f"""SELECT value FROM Saves
-        WHERE title_of_save = '{type_learn}'""").fetchall()[0][0]
+        maximum = getattr(self.current_user, f'{type_learn}_save', 1)
         number_of_lesson_obj.setMaximum(maximum)
         past_learn_button = QPushButton('Повторить предыдущую часть', self)
         past_learn_button.setGeometry(100, 140, 500, 50)
-        past_learn_button.clicked.connect(lambda: get_lesson(number_of_lesson_obj, learn, NUMERABLE))
-        new_learn_button = QPushButton('Начать сначала (сбросит все сохраненные данные в этом разделе)', self)
-        new_learn_button.setGeometry(100, 240, 500, 50)
-        new_learn_button.clicked.connect(lambda: learn(NEW))
+        past_learn_button.clicked.connect(lambda: get_lesson(number_of_lesson_obj, self.learn, NUMERABLE))
         view_learned_words = QPushButton('Посмотреть изученное', self)
         view_learned_words.setGeometry(100, 340, 500, 50)
-        ui = [continue_learn_button, past_learn_button, new_learn_button,
+        ui = [continue_learn_button, past_learn_button,
               number_of_lesson_obj, view_learned_words]
         view_learned_words.clicked.connect(lambda: self.view_learned(type_learn, ui))
 
