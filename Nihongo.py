@@ -4,7 +4,7 @@ import sys
 import webbrowser
 from shutil import copy2
 
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from PIL import Image
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -13,6 +13,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLabel, QWi
                              QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem)
 
 import data.test
+import data.register
+from data.fonts import FONT_20, FONT_14
 from data import db_session
 from data.models.hiragana import Hiragana
 from data.models.kanji import Kanji
@@ -42,10 +44,6 @@ TIME_FOR_ONE_ELEMENT = {  # допустимое время тестирован
     KANJI: 7
 }
 ERROR_PERCENT_FOR_TEST = 10  # допустимый процент ошибок для зачёта тестирования
-FONT_14 = QFont()
-FONT_14.setPointSize(14)
-FONT_20 = QFont()
-FONT_20.setPointSize(20)
 DB_FILE_NAME = 'Main.sqlite'
 LOG_FILE = 'Log.log'
 
@@ -148,55 +146,13 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         enable_ui([self.start_learn_button, self.start_checking_button,
                    self.setup_button, self.answer_button])
 
-    def disable_ui(self):
+    def disable_ui(self, without=None):
         for ui_item in self.ui_list:
-            ui_item.setVisible(False)
-            ui_item.setEnabled(False)
+            if without is None or isinstance(without, list) and all([True if ui_item != i else False for i in without]):
+                ui_item.setVisible(False)
+                ui_item.setEnabled(False)
 
-    def register_menu(self):
-        pass
 
-    def login(self, ui: dict):
-        session = db_session.create_session()
-        login = ui['login_line'].text()
-        password = ui['password_line'].text()
-        user = session.query(User).filter(
-            User.login == login,
-            check_password_hash(User.password_hash, password)
-        ).first()
-        if user:
-            self.current_user = user
-            self.start_learn()
-        else:
-            ui['info'].setText('Неверный логин или пароль!')
-
-    def login_menu(self):
-        self.disable_ui()
-        info_label = QLabel('Введите свой логин и пароль', self)
-        info_label.setGeometry(50, 40, 600, 40)
-        info_label.setFont(FONT_14)
-        info_label.setAlignment(Qt.AlignCenter)
-        info_login_label = QLabel('Логин: ', self)
-        info_login_label.setGeometry(10, 120, 80, 60)
-        info_login_label.setFont(FONT_14)
-        info_password_label = QLabel('Пароль: ', self)
-        info_password_label.setGeometry(10, 270, 80, 60)
-        info_password_label.setFont(FONT_14)
-        login_line = QLineEdit(self)
-        login_line.setGeometry(100, 120, 500, 60)
-        password_line = QLineEdit(self)
-        password_line.setGeometry(100, 240, 500, 60)
-        confirm_button = QPushButton('Подтвердить', self)
-        confirm_button.setGeometry(50, 340, 600, 60)
-        confirm_button.setFont(FONT_20)
-        ui = {'info': info_label,
-              'login_label': info_login_label,
-              'password_label': info_password_label,
-              'login_line': login_line,
-              'password_line': password_line,
-              'confirm': confirm_button}
-        self.ui_list.extend(ui.values())
-        confirm_button.clicked.connect(lambda: self.login(ui))
 
     def answer_of_users_questions(self):
         self.disable_ui()
@@ -270,6 +226,14 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         enable_ui(self.ui_list)
         set_style(self)
         self.login_menu()
+
+    def login_menu(self):
+        self.setVisible(False)
+        self.setEnabled(False)
+        register = data.register.LoginRegisterMenu(self)
+        register.show()
+        self.setVisible(True)
+        self.setEnabled(True)
 
     def checking(self):
         self.disable_ui()
