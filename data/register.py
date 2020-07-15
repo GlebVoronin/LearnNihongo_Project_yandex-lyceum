@@ -6,12 +6,13 @@ import Nihongo
 from data import db_session
 from data.fonts import FONT_20, FONT_14
 from data.models.users import User
-
+##############################################доделать
 
 class LoginRegisterMenu(QMainWindow):
     def __init__(self, parent):
         super().__init__(parent, Qt.Window)
         db_session.global_init(f'db/{Nihongo.DB_FILE_NAME}')
+        self.login_menu()
 
     def login(self, ui, register=False):
         session = db_session.create_session()
