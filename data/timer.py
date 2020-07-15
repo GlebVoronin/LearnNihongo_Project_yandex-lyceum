@@ -18,7 +18,7 @@ class Timer(Thread):
             seconds_left = self.duration - self.seconds
             minutes, seconds = seconds_left // 60, seconds_left % 60
             self.display_object.display(f'{minutes}:{seconds}')
-        if not self.is_test_alive:
+        if self.is_test_alive:
             self.end_function()
 
     def end_function(self):
