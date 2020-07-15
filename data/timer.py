@@ -8,20 +8,18 @@ class Timer(Thread):
         self.duration = duration
         self.display_object = display_object
         self.seconds = 0
-        self.is_test_alive = True
+        self.stop = False
         self.main_object = main_object
 
+    def end(self):
+        self.stop = True
+
     def run(self):
-        while self.duration - self.seconds > 0 and self.is_test_alive:
+        while self.duration - self.seconds > 0 and not self.stop:
             sleep(1)
             self.seconds += 1
             seconds_left = self.duration - self.seconds
             minutes, seconds = seconds_left // 60, seconds_left % 60
             self.display_object.display(f'{minutes}:{seconds}')
-        if self.is_test_alive:
-            self.end_function()
-
-    def end_function(self):
-        self.is_test_alive = False
-        self.main_object.can_click = False
-        self.main_object.info_label.setText('Время вышло')
+        if not self.stop:
+            self.main_object.stop_test(timer=True)
