@@ -132,13 +132,13 @@ class Test(QMainWindow):
         current_element = next(self.elements_iterator)
         self.create_question(current_element)
 
-    def stop_test(self):
+    def stop_test(self, timer=False):
         [button.setEnabled(False) for button in self.buttons]
         [button.setVisible(False) for button in self.buttons]
         result_label = QLabel('', self)
         result_label.setGeometry(50, 50, 600, 40)
         result_label.setFont(Nihongo.FONT_20)
-        if self.permissible_mistakes >= 0 and self.timer.is_test_alive:
+        if self.permissible_mistakes >= 0 and not timer:
             if self.upgrade:
                 Nihongo.update_progress(self.element_type, self.user)
                 result_label.setText('Вы прошли тест и открыли новый урок')
