@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
 
 import Nihongo
+from data.fonts import FONT_20, FONT_14
 from data.timer import Timer
 
 
@@ -40,19 +41,19 @@ class Test(QMainWindow):
 
         self.mistakes_left_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         self.mistakes_left_label.setGeometry(390, 0, 300, 30)
-        self.mistakes_left_label.setFont(Nihongo.FONT_14)
+        self.mistakes_left_label.setFont(FONT_14)
         info = f'Вам необходимо пройти тест не более чем за {self.all_time} секунд'
         self.info_label = QLabel(info, self)
         self.info_label.setGeometry(50, 30, 600, 30)
-        self.info_label.setFont(Nihongo.FONT_14)
+        self.info_label.setFont(FONT_14)
         self.label_of_element = QLabel('', self)
         self.label_of_element.setGeometry(50, 70, 600, 40)
         self.label_of_element.setAlignment(Qt.AlignHCenter)
-        self.label_of_element.setFont(Nihongo.FONT_20)
+        self.label_of_element.setFont(FONT_20)
         self.label_of_reading = QLabel('', self)
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
-        self.label_of_reading.setFont(Nihongo.FONT_20)
+        self.label_of_reading.setFont(FONT_20)
 
     def create_buttons(self):
         for button in self.buttons:
@@ -63,7 +64,7 @@ class Test(QMainWindow):
             for index in range(4):
                 button = QPushButton('', self)
                 button.setGeometry(0, x, 700, 50)
-                button.setFont(Nihongo.FONT_20)
+                button.setFont(FONT_20)
                 x += 60
                 self.buttons.append(button)
         else:
@@ -72,7 +73,7 @@ class Test(QMainWindow):
             for index in range(12):
                 button = QPushButton('', self)
                 button.setGeometry(y, x, 233, 50)
-                button.setFont(Nihongo.FONT_20)
+                button.setFont(FONT_20)
                 x += 60
                 self.buttons.append(button)
                 if index % 4 == 0:
@@ -133,27 +134,30 @@ class Test(QMainWindow):
         self.create_question(current_element)
 
     def stop_test(self, timer=False):
+        self.timer.end()
         [button.setEnabled(False) for button in self.buttons]
         [button.setVisible(False) for button in self.buttons]
         result_label = QLabel('', self)
         result_label.setGeometry(50, 50, 600, 40)
-        result_label.setFont(Nihongo.FONT_20)
+        result_label.setFont(FONT_20)
         if self.permissible_mistakes >= 0 and not timer:
             if self.upgrade:
                 Nihongo.update_progress(self.element_type, self.user)
                 result_label.setText('Вы прошли тест и открыли новый урок')
             else:
                 result_label.setText('Вы прошли тест')
+        elif timer:
+            result_label.setText('Ваше время истекло')
         else:
             retest_button = QPushButton('Пройти тест заново', self)
-            retest_button.setFont(Nihongo.FONT_20)
+            retest_button.setFont(FONT_20)
             retest_button.setGeometry(50, 200, 600, 40)
             retest_button.clicked.connect(
                 lambda: self.reset())
             result_label.setText('Вы не прошли тест')
             Nihongo.enable_ui([result_label])
         continue_button = QPushButton('Продолжить', self)
-        continue_button.setFont(Nihongo.FONT_20)
+        continue_button.setFont(FONT_20)
         continue_button.setGeometry(50, 400, 600, 40)
         continue_button.clicked.connect(
             lambda: self.destroy())
