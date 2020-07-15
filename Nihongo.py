@@ -225,7 +225,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                         self.start_learn_button, self.answer_button]
         enable_ui(self.ui_list)
         set_style(self)
-        self.login_menu()
 
     def login_menu(self):
         self.setVisible(False)
