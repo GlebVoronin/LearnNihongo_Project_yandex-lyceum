@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLabel, QWi
 
 import data.test
 import data.register
-from data.fonts import FONT_20, FONT_14
+from data.style import FONT_20, FONT_14
 from data import db_session
 from data.models.hiragana import Hiragana
 from data.models.kanji import Kanji
