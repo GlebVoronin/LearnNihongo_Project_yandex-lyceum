@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
 
 import Nihongo
-from data.fonts import FONT_20, FONT_14
+from data.style import FONT_20, FONT_14
 from data.timer import Timer
 
 
@@ -78,7 +78,6 @@ class Test(QMainWindow):
                 self.buttons.append(button)
                 if index % 4 == 0:
                     y += 233
-        Nihongo.enable_ui(self.buttons)
 
     @staticmethod
     def select_elements_for_question(elements, current_element):
@@ -127,17 +126,27 @@ class Test(QMainWindow):
                     lambda: self.check_answer_of_kanji(current_element, self.buttons))
 
     def start_test(self):
-        continue_button = QPushButton('Продолжить', self)
-        continue_button.setGeometry(0, 390, 700, 50)
-        continue_button.clicked.connect(self.continue_test)
+        self.continue_button = QPushButton('Продолжить', self)
+        self.continue_button.setGeometry(0, 390, 700, 50)
+        self.continue_button.clicked.connect(self.continue_test)
         current_element = next(self.elements_iterator)
         self.create_question(current_element)
 
     def stop_test(self, timer=False):
         self.timer.end()
-        [button.setEnabled(False) for button in self.buttons]
-        [button.setVisible(False) for button in self.buttons]
+        for button in self.buttons:
+            button.deleteLater()
+        self.buttons = []
+        self.info_label.setVisible(False)
+        self.info_label.setEnabled(False)
+        self.label_of_element.setVisible(False)  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        self.label_of_element.setEnabled(False)
+        self.label_of_reading.setVisible(False)
+        self.label_of_reading.setEnabled(False)
+        self.continue_button.setVisible(False)
+        self.continue_button.setEnabled(False)
         result_label = QLabel('', self)
+        result_label.setAlignment(Qt.AlignCenter)
         result_label.setGeometry(50, 50, 600, 40)
         result_label.setFont(FONT_20)
         if self.permissible_mistakes >= 0 and not timer:
@@ -156,12 +165,11 @@ class Test(QMainWindow):
                 lambda: self.reset())
             result_label.setText('Вы не прошли тест')
             Nihongo.enable_ui([result_label])
-        continue_button = QPushButton('Продолжить', self)
-        continue_button.setFont(FONT_20)
-        continue_button.setGeometry(50, 400, 600, 40)
-        continue_button.clicked.connect(
+        self.continue_button = QPushButton('Продолжить', self)
+        self.continue_button.setFont(FONT_20)
+        self.continue_button.setGeometry(50, 400, 600, 40)
+        self.continue_button.clicked.connect(
             lambda: self.destroy())
-        Nihongo.enable_ui([continue_button])
 
     def reset(self):
         self.__init__(self.element_type, self.elements,
