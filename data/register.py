@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import Nihongo
 from data import db_session
-from data.fonts import FONT_20, FONT_14
+from data.style import FONT_20, FONT_14
 from data.models.users import User
 ##############################################доделать
 
