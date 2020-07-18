@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
 
 import Nihongo
-from data.style import FONT_20, FONT_14
+from data.style import *
 from data.timer import Timer
 
 
@@ -34,11 +34,22 @@ class Test(QMainWindow):
         self.setupUi()
         self.start_test()
 
+    def disable_ui(self):
+        for ui_item in self.ui_list:
+            ui_item.setParent(None)
+            del ui_item
+
+    def set_style_and_show_all(self):
+        for ui_object in self.children():
+            if hasattr(ui_object, 'setStyleSheet'):
+                if isinstance(ui_object, QPushButton):
+                    set_color(ui_object, MAIN_COLORS['main_button'])
+                else:
+                    set_color(ui_object, MAIN_COLORS['menu'])
+            ui_object.show()
     def setupUi(self):
         self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.resize(700, 450)
-        Nihongo.set_style(self)
-
         self.mistakes_left_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
         self.mistakes_left_label.setGeometry(390, 0, 300, 30)
         self.mistakes_left_label.setFont(FONT_14)
@@ -131,6 +142,7 @@ class Test(QMainWindow):
         self.continue_button.clicked.connect(self.continue_test)
         current_element = next(self.elements_iterator)
         self.create_question(current_element)
+        [i.show() for i in self.children() if hasattr(i, 'show')]
 
     def stop_test(self, timer=False):
         self.timer.end()
