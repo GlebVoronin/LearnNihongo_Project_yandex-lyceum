@@ -4,23 +4,22 @@ import sys
 import webbrowser
 from shutil import copy2
 
-from werkzeug.security import check_password_hash, generate_password_hash
 from PIL import Image
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QLabel, QWidget,
-                             QFileDialog, QLineEdit, QSpinBox, QListWidget, QListWidgetItem)
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import *
+from werkzeug.security import check_password_hash
 
-import data.test
 import data.register
-from data.style import FONT_20, FONT_14
+import data.test
 from data import db_session
 from data.models.hiragana import Hiragana
 from data.models.kanji import Kanji
 from data.models.katakana import Katakana
 from data.models.users import User
 from data.models.words import Word
+from data.style import *
 
 """Общие константы в программе для обозначения данных категорий"""
 HIRAGANA = 'hiragana'
@@ -54,33 +53,6 @@ logging.basicConfig(
 )
 
 
-def set_style(ui_element, correct_check=False, correct=True):
-    """Функция устанавливает стиль элемента"""
-    if isinstance(ui_element, QPushButton):
-        # нужно отметить правильные и неправильные ответы пользователя
-        if correct_check:
-            if correct:
-                ui_element.setStyleSheet('background-color: rgb(0, 255, 0)')
-            else:
-                ui_element.setStyleSheet('background-color: rgb(255, 0, 0)')
-        else:
-            ui_element.setStyleSheet('background-color: rgb(70, 70, 200)')
-    elif isinstance(ui_element, QWidget):
-        ui_element.setStyleSheet('background-color: rgb(120, 120, 255)')
-
-
-def enable_ui(list_of_ui):
-    """
-    Данная функция активирует видимость элемента пользовательского интерфейса
-    и возможность взаимоодействия с ним
-    Также устанавливает стиль элементов
-    """
-    for ui_element in list_of_ui:
-        ui_element.setVisible(True)
-        ui_element.setEnabled(True)
-        set_style(ui_element)
-
-
 class ProgramLearnJapaneseLanguage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -88,7 +60,29 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.temporary_files = {'sound': None, 'image': None}
         self.current_user = None
         self.path = os.getcwd()  # Путь к текущей папке программы
+        self.ui_list = []
+        self.resize(700, 450)
+        self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.setupUi()
+        self.set_style_and_show_all()
+
+    def setupUi(self):
+        start_learn_button = QPushButton("Обучение", self)
+        start_learn_button.setGeometry(25, 58, 650, 40)
+        start_learn_button.setFont(FONT_14)
+        start_learn_button.clicked.connect(self.start_learn)
+        start_checking_button = QPushButton("Тест", self)
+        start_checking_button.setGeometry(25, 156, 650, 40)
+        start_checking_button.setFont(FONT_14)
+        start_checking_button.clicked.connect(self.checking)
+        setup_button = QPushButton("Настройка", self)
+        setup_button.setGeometry(25, 254, 650, 40)
+        setup_button.setFont(FONT_14)
+        setup_button.clicked.connect(self.open_setup_menu)
+        answer_button = QPushButton("Справка", self)
+        answer_button.setGeometry(25, 352, 650, 40)
+        answer_button.setFont(FONT_14)
+        answer_button.clicked.connect(self.answer_of_users_questions)
 
     def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE, lesson_number=1):
         """
@@ -130,29 +124,26 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         return_button = QPushButton('Меню', self)
         return_button.setGeometry(660, 0, 40, 40)
         return_button.clicked.connect(self.return_to_start_menu)
-        enable_ui([return_button])
         self.ui_list.append(return_button)
-
-    def create_normal_main_menu_button(self):
-        return_to_menu_button = QPushButton('Вернуться в исходное меню', self)
-        return_to_menu_button.setGeometry(50, 100, 600, 50)
-        return_to_menu_button.clicked.connect(self.return_to_start_menu)
-        return_to_menu_button.setFont(FONT_20)
-        self.ui_list.append(return_to_menu_button)
-        enable_ui([return_to_menu_button])
 
     def return_to_start_menu(self):
         self.disable_ui()
-        enable_ui([self.start_learn_button, self.start_checking_button,
-                   self.setup_button, self.answer_button])
+        self.setupUi()
+        self.set_style_and_show_all()
 
-    def disable_ui(self, without=None):
+    def disable_ui(self):
         for ui_item in self.ui_list:
-            if without is None or isinstance(without, list) and all([True if ui_item != i else False for i in without]):
-                ui_item.setVisible(False)
-                ui_item.setEnabled(False)
+            ui_item.setParent(None)
+            del ui_item
 
-
+    def set_style_and_show_all(self):
+        for ui_object in self.children():
+            if hasattr(ui_object, 'setStyleSheet'):
+                if isinstance(ui_object, QPushButton):
+                    set_color(ui_object, MAIN_COLORS['main_button'])
+                else:
+                    set_color(ui_object, MAIN_COLORS['menu'])
+            ui_object.show()
 
     def answer_of_users_questions(self):
         self.disable_ui()
@@ -189,55 +180,20 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         font.setPointSize(11)
         answer_label.setFont(font)
         self.ui_list.extend([answer_label])
-        enable_ui([answer_label])
-
-    def setupUi(self):
-        self.resize(700, 450)
-        self.centralwidget = QtWidgets.QWidget(self)
-        self.start_learn_button = QPushButton(self.centralwidget)
-        self.start_learn_button.setGeometry(25, 58, 650, 40)
-        self.start_learn_button.setFont(FONT_14)
-        self.start_checking_button = QPushButton(self.centralwidget)
-        self.start_checking_button.setGeometry(25, 156, 650, 40)
-        self.start_checking_button.setFont(FONT_14)
-        self.setup_button = QPushButton(self.centralwidget)
-        self.setup_button.setGeometry(25, 254, 650, 40)
-        self.setup_button.setFont(FONT_14)
-        self.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(0, 0, 700, 21)
-        self.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(self)
-        self.setStatusBar(self.statusbar)
-        self.setWindowTitle("Программа для помощи в изучении японского языка")
-        self.start_learn_button.setText("Обучение")
-        self.start_checking_button.setText("Проверка")
-        self.setup_button.setText("Настройка")
-        self.setup_button.clicked.connect(self.open_setup_menu)
-        self.start_learn_button.clicked.connect(self.start_learn)
-        self.start_checking_button.clicked.connect(self.checking)
-        QtCore.QMetaObject.connectSlotsByName(self)
-        self.answer_button = QPushButton('Справка', self)
-        self.answer_button.setGeometry(25, 352, 650, 40)
-        self.answer_button.clicked.connect(self.answer_of_users_questions)
-        self.answer_button.setFont(FONT_14)
-        self.ui_list = [self.setup_button, self.start_checking_button,
-                        self.start_learn_button, self.answer_button]
-        enable_ui(self.ui_list)
-        set_style(self)
+        self.set_style_and_show_all()
 
     def login_menu(self):
-        self.setVisible(False)
-        self.setEnabled(False)
+        ################ bug
+        self.hide()
         register = data.register.LoginRegisterMenu(self)
         register.show()
-        self.setVisible(True)
-        self.setEnabled(True)
+        [i.show() for i in self.children() if hasattr(i, 'show')]
 
     def checking(self):
         self.disable_ui()
         self.create_small_main_menu_button()
         self.create_main_types_of_learning_button_with_function(self.menu_of_checking)
+        self.set_style_and_show_all()
 
     def menu_of_checking(self, type_of_checking):
         self.disable_ui()
@@ -245,12 +201,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         continue_test_button = QPushButton('Пройти тест по последнему уроку', self)
         continue_test_button.setGeometry(100, 40, 500, 50)
         continue_test_button.clicked.connect(
-            lambda: self.start_checking_by_type(type_of_checking, CONTINUE))
-
-        def get_lesson(number_of_lesson_object: QSpinBox, function_of_test, type_of_checking):
-            number_of_lesson = number_of_lesson_object.value()
-            function_of_test(type_of_checking, NUMERABLE, number_of_lesson)
-
+            lambda: self.start_test_by_type(type_of_checking, CONTINUE)
+        )
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
@@ -260,22 +212,22 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         past_test_button = QPushButton('Пройти тест по предыдущим урокам', self)
         past_test_button.setGeometry(100, 140, 500, 50)
         past_test_button.clicked.connect(
-            lambda: get_lesson(number_of_lesson_obj, self.start_checking_by_type, NUMERABLE))
+            lambda: self.start_test_by_type(type_of_checking, number_of_lesson_obj.value(), NUMERABLE)
+        )
         hard_test_button = QPushButton('Начать тест по всему изученному в данном разделе', self)
         hard_test_button.setGeometry(100, 240, 500, 50)
         hard_test_button.clicked.connect(
-            lambda: self.start_checking_by_type(type_of_checking, HARD))
+            lambda: self.start_test_by_type(type_of_checking, HARD))
         view_learned_words = QPushButton('Посмотреть изученное', self)
         view_learned_words.setGeometry(100, 340, 500, 50)
         ui = [continue_test_button, past_test_button, hard_test_button,
               number_of_lesson_obj, view_learned_words]
         view_learned_words.clicked.connect(
             lambda: self.view_learned(type_of_checking, ui))
-
-        enable_ui(ui)
         self.ui_list.extend(ui)
+        self.set_style_and_show_all()
 
-    def start_checking_by_type(self, checking_type, lesson_type, lesson_number=1):
+    def start_test_by_type(self, checking_type, lesson_type, lesson_number=1):
         """Метод передаёт необходимые параметры в процесс тестирования
         (возможно этот метод не нужен)"""
         if self.current_user and (checking_type == HARD or checking_type == CONTINUE):
@@ -333,7 +285,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             self.line_edit_of_writing.setText(
                 'Такой кандзи уже существует, пожалуйста, воспользуйтесь редактированием!'
             )
-        self.disable_ui()
         self.open_setup_menu()
 
     def add_kanji(self):
@@ -377,7 +328,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
               self.line_edit_of_writing, image_button, sound_button,
               confirm_button, image_label, sound_label, self.line_edit_of_kunyomi_reading]
         self.ui_list.extend(ui)
-        enable_ui(ui)
+        self.set_style_and_show_all()
 
     def learn(self, element_type, lesson_type, lesson_number=1):
         info_methods = {
@@ -397,14 +348,13 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.create_small_main_menu_button()
 
         add_word_button = QPushButton('Добавить новое слово в программу', self)
-        add_kanji_button = QPushButton('Добавить новый кандзи в программу', self)
         add_word_button.setGeometry(50, 50, 600, 40)
-        add_kanji_button.setGeometry(50, 150, 600, 40)
-        self.ui_list.append(add_kanji_button)
-        self.ui_list.append(add_word_button)
         add_word_button.clicked.connect(self.add_word)
+        add_kanji_button = QPushButton('Добавить новый кандзи в программу', self)
+        add_kanji_button.setGeometry(50, 150, 600, 40)
         add_kanji_button.clicked.connect(self.add_kanji)
-        enable_ui([add_word_button, add_kanji_button])
+        self.ui_list.extend([add_kanji_button, add_word_button])
+        self.set_style_and_show_all()
 
     def add_image(self, image_label):
         file_name, pressed = QFileDialog.getOpenFileName(self, 'Выберите изображение', '')
@@ -425,6 +375,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
 
     @staticmethod
     def listen(way_to_sound):
+        """Доработать!!!!!!!!!!!"""
         webbrowser.open(way_to_sound)
 
     def save_new_word(self):
@@ -447,7 +398,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         )
         session.add(word)
         session.commit()
-        self.disable_ui()
         self.open_setup_menu()
 
     def add_word(self):
@@ -487,7 +437,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                         self.line_edit_of_reading, self.line_edit_of_writing, image_button,
                         sound_button, confirm_button, image_label, sound_label]
         self.ui_list.extend(temporary_ui)
-        enable_ui(temporary_ui)
+        self.set_style_and_show_all()
 
     def load_user(self, login, password, hashed=False):
         session = db_session.create_session()
@@ -502,13 +452,11 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.current_user = user
 
     def test_of_learned_elements(self, element_type, elements, is_upgrading_test=False):
-        self.setVisible(False)
-        self.setEnabled(False)
+        self.hide()
         user = self.current_user
         test = data.test.Test(element_type, elements, is_upgrading_test, user, self)
         test.show()
-        self.setVisible(True)
-        self.setEnabled(True)
+        self.show()
 
     def create_kana_info(self, type_of_kana):
         self.disable_ui()
@@ -544,7 +492,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         ui = [kana_label, kana_next_button, info_label_about_kana,
               info_label_about_read, transliteration_reading_label]
         self.ui_list.extend(ui)
-        enable_ui(ui)
+        self.set_style_and_show_all()
         try:
             symbol = next(self.temporary_elements_for_learn)
             writing, reading = symbol
@@ -565,8 +513,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(type_of_kana, kana_symbols, True))
             checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
-            enable_ui(ui)
             self.ui_list.extend(ui)
+            self.set_style_and_show_all()
 
     def create_kanji_info(self):
         self.disable_ui()
@@ -638,7 +586,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
               info_label_about_meaning, info_label_about_read_onyomi,
               info_label_about_read_kunyomi]
         self.ui_list.extend(ui)
-        enable_ui(ui)
+        self.set_style_and_show_all()
         try:
             kanji = next(self.temporary_elements_for_learn)
             writing, onyomi_reading, kunyomi_reading, meaning, examples, way_to_image, way_to_sound = kanji
@@ -659,7 +607,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             kanji_onyomi_reading_label.setText(onyomi_reading)
             kanji_kunyomi_reading_label.setText(kunyomi_reading)
             kanji_meaning_label.setText(meaning)
-
         except StopIteration:
             self.disable_ui()
 
@@ -674,8 +621,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(KANJI, kanji, True))
             checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
-            enable_ui(ui)
             self.ui_list.extend(ui)
+            self.set_style_and_show_all()
 
     def create_word_info(self):
         self.disable_ui()
@@ -732,7 +679,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
               info_label_about_read, info_label_about_word,
               word_next_button]
         self.ui_list.extend(ui)
-        enable_ui(ui)
+        self.set_style_and_show_all()
         try:
             word = next(self.temporary_elements_for_learn)
             writing, reading, meaning, way_to_image, way_to_sound = word
@@ -761,57 +708,48 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             checking_button.clicked.connect(lambda: self.test_of_learned_elements(WORD, words, True))
             checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
-            enable_ui(ui)
             self.ui_list.extend(ui)
-
-    def view_learned(self, type_of_learned, ui_list):
+            self.set_style_and_show_all()\
+            
+    def view_learned(self, learn_type):
         self.disable_ui()
         self.create_small_main_menu_button()
 
-        elements = self.get_lesson_elements_by_type(type_of_learned, lesson_type=HARD)
+        elements = self.get_lesson_elements_by_type(learn_type, lesson_type=HARD)
         list_widget = QListWidget(self)
         list_widget.setGeometry(0, 0, 700, 380)
         for element in elements:
             list_widget.addItem(QListWidgetItem(f'{element.title}'))
         return_button = QPushButton('Вернуться к выбору', self)
-        self.ui_list.extend([return_button, list_widget])
-
-        def return_to_learn_menu(ui_list):
-            self.disable_ui()
-            enable_ui(ui_list)
-
         return_button.setGeometry(50, 400, 600, 50)
         return_button.setFont(FONT_14)
-        return_button.clicked.connect(lambda: return_to_learn_menu(ui_list))
-        enable_ui([return_button, list_widget])
+        return_button.clicked.connect(lambda: self.learn_menu(learn_type))
+        self.ui_list.extend([return_button, list_widget])
+        self.set_style_and_show_all()
 
-    def learn_menu(self, type_learn):
+    def learn_menu(self, learn_type):
         self.disable_ui()
         self.create_small_main_menu_button()
         continue_learn_button = QPushButton('Продолжить', self)
         continue_learn_button.setGeometry(100, 40, 500, 50)
-        continue_learn_button.clicked.connect(lambda: self.learn(type_learn, CONTINUE))
-
-        def get_lesson(number_of_lesson_obj, function_of_learn, type_of_learn):
-            number_of_lesson = number_of_lesson_obj.value()
-            function_of_learn(type_of_learn, number_of_lesson)
-
+        continue_learn_button.clicked.connect(lambda: self.learn(learn_type, CONTINUE))
         number_of_lesson_obj = QSpinBox(self)
         number_of_lesson_obj.setGeometry(610, 140, 30, 50)
         number_of_lesson_obj.setMinimum(1)
-        maximum = getattr(self.current_user, f'{type_learn}_save', 1)
+        maximum = getattr(self.current_user, f'{learn_type}_save', 1)
         number_of_lesson_obj.setMaximum(maximum)
         past_learn_button = QPushButton('Повторить предыдущую часть', self)
         past_learn_button.setGeometry(100, 140, 500, 50)
-        past_learn_button.clicked.connect(lambda: get_lesson(number_of_lesson_obj, self.learn, NUMERABLE))
+        past_learn_button.clicked.connect(
+            lambda: self.learn(learn_type, NUMERABLE, number_of_lesson_obj.value())
+        )
         view_learned_words = QPushButton('Посмотреть изученное', self)
         view_learned_words.setGeometry(100, 340, 500, 50)
         ui = [continue_learn_button, past_learn_button,
               number_of_lesson_obj, view_learned_words]
-        view_learned_words.clicked.connect(lambda: self.view_learned(type_learn, ui))
-
-        enable_ui(ui)
+        view_learned_words.clicked.connect(lambda: self.view_learned(learn_type))
         self.ui_list.extend(ui)
+        self.set_style_and_show_all()
 
     def create_main_types_of_learning_button_with_function(self, function):
         hiragana_button = QPushButton('Хирагана', self)
@@ -829,12 +767,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         ui = [hiragana_button, katakana_button,
               kanji_button, words_button]
         self.ui_list.extend(ui)
-        enable_ui(ui)
 
     def start_learn(self):
         self.disable_ui()
         self.create_small_main_menu_button()
         self.create_main_types_of_learning_button_with_function(self.learn_menu)
+        self.set_style_and_show_all()
 
 
 if __name__ == '__main__':
