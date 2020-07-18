@@ -49,7 +49,8 @@ class Test(QMainWindow):
                     set_color(ui_object, MAIN_COLORS['main_button'])
                 else:
                     set_color(ui_object, MAIN_COLORS['menu'])
-            ui_object.show()
+            if hasattr(ui_object, 'show'):
+                ui_object.show()
 
     def setupUi(self):
         self.setWindowTitle("Программа для помощи в изучении японского языка")
