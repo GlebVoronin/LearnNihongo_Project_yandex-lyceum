@@ -1,3 +1,22 @@
+import os
+import webbrowser
+import logging
+from shutil import copy2
+
+from PIL import Image
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import *
+from werkzeug.security import check_password_hash
+
+import data.register
+import data.test
+from data import db_session
+from data.consts import *
+from data.models.users import User
+from data.style import *
+
 
 class ProgramLearnJapaneseLanguage(QMainWindow):
     def __init__(self):
@@ -655,8 +674,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             checking_button.setFont(FONT_20)
             ui = [checking_button, return_to_menu_button]
             self.ui_list.extend(ui)
-            self.set_style_and_show_all()\
-            
+            self.set_style_and_show_all()
+
     def view_learned(self, learn_type):
         self.disable_ui()
         self.create_small_main_menu_button()
@@ -719,6 +738,3 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.create_small_main_menu_button()
         self.create_main_types_of_learning_button_with_function(self.learn_menu)
         self.set_style_and_show_all()
-
-
-
