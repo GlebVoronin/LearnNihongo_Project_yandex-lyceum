@@ -108,7 +108,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
                     set_color(ui_object, MAIN_COLORS['main_button'])
                 else:
                     set_color(ui_object, MAIN_COLORS['menu'])
-            ui_object.show()
+            if hasattr(ui_object, 'show'):
+                ui_object.show()
 
     def answer_of_users_questions(self):
         self.disable_ui()
@@ -152,7 +153,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.hide()
         register = data.register.LoginRegisterMenu(self)
         register.show()
-        [i.show() for i in self.children() if hasattr(i, 'show')]
+        self.show()
 
     def checking(self):
         self.disable_ui()
@@ -460,9 +461,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.set_style_and_show_all()
         try:
             symbol = next(self.temporary_elements_for_learn)
-            writing, reading = symbol
-            kana_label.setText(writing)
-            transliteration_reading_label.setText(reading)
+            kana_label.setText(symbol.title)
+            transliteration_reading_label.setText(symbol.reading)
 
         except StopIteration:
             self.disable_ui()
@@ -554,24 +554,23 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.set_style_and_show_all()
         try:
             kanji = next(self.temporary_elements_for_learn)
-            writing, onyomi_reading, kunyomi_reading, meaning, examples, way_to_image, way_to_sound = kanji
-            if way_to_image:
-                pixmap = QPixmap(way_to_image)
+            if kanji.path_to_image:
+                pixmap = QPixmap(kanji.path_to_image)
                 kanji_image_label.setPixmap(pixmap)
-            if way_to_sound:
-                kanji_reading_button.clicked.connect(lambda: self.listen(way_to_sound))
+            if kanji.path_to_sound:
+                kanji_reading_button.clicked.connect(lambda: self.listen(kanji.path_to_sound))
             else:
                 kanji_reading_button.setText('Нет звукового файла')
-            if examples:
+            if kanji.examples:
                 try:
-                    for example in examples.split(','):
+                    for example in kanji.examples.split(','):
                         kanji_use_examples_list.addItem(QListWidgetItem(f'{example}'))
                 except Exception:
                     pass
-            kanji_label.setText(writing)
-            kanji_onyomi_reading_label.setText(onyomi_reading)
-            kanji_kunyomi_reading_label.setText(kunyomi_reading)
-            kanji_meaning_label.setText(meaning)
+            kanji_label.setText(kanji.title)
+            kanji_onyomi_reading_label.setText(kanji.onyomi_reading)
+            kanji_kunyomi_reading_label.setText(kanji.kunyomi_reading)
+            kanji_meaning_label.setText(kanji.meaning)
         except StopIteration:
             self.disable_ui()
 
@@ -647,17 +646,16 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.set_style_and_show_all()
         try:
             word = next(self.temporary_elements_for_learn)
-            writing, reading, meaning, way_to_image, way_to_sound = word
-            if way_to_image:
-                pixmap = QPixmap(way_to_image)
+            if word.path_to_image:
+                pixmap = QPixmap(word.path_to_image)
                 word_image_label.setPixmap(pixmap)
-            if way_to_sound:
-                word_reading_button.clicked.connect(lambda: self.listen(way_to_sound))
+            if word.path_to_sound:
+                word_reading_button.clicked.connect(lambda: self.listen(word.path_to_sound))
             else:
                 word_reading_button.setText('Нет звукового файла')
-            word_label.setText(writing)
-            word_hiragana_reading_label.setText(reading)
-            word_meaning_label.setText(meaning)
+            word_label.setText(word.title)
+            word_hiragana_reading_label.setText(word.reading)
+            word_meaning_label.setText(word.meaning)
 
         except StopIteration:
             self.disable_ui()
