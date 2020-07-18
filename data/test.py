@@ -1,7 +1,7 @@
 from random import shuffle, choices
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QLCDNumber, QMainWindow, QPushButton, QLabel)
+from PyQt5.QtWidgets import *
 
 from data import db_session
 from data.consts import *
@@ -17,7 +17,7 @@ class Test(QMainWindow):
         self.element_type = element_type
         self.elements = elements
         self.parent_widget = parent
-        self.current_user = user
+        self.user = user
         self.one_element_time = TIME_FOR_ONE_ELEMENT[element_type]
         self.all_time = self.one_element_time * len(elements)
         self.upgrade = is_upgrading
@@ -28,19 +28,18 @@ class Test(QMainWindow):
         if element_type == KANJI:
             self.kanji_mistakes = 0
         self.buttons = []
+        self.ui_list = []
         self.elements_iterator = iter(self.elements)
-        lcd_timer = QLCDNumber(self)
-        lcd_timer.setGeometry(325, 0, 50, 30)
-        self.timer = Timer(self.all_time, lcd_timer, self)
-        self.timer.start()
         self.setupUi()
-        self.set_style_and_show_all()
         self.start_test()
 
     def disable_ui(self):
-        for ui_item in self.children():
+        for ui_item in self.ui_list:
             ui_item.setParent(None)
-            del ui_item
+        self.ui_list = []
+        for button in self.buttons:
+            button.setParent(None)
+        self.buttons = []
 
     def set_style_and_show_all(self):
         for ui_object in self.children():
@@ -53,6 +52,8 @@ class Test(QMainWindow):
                 ui_object.show()
 
     def setupUi(self):
+        self.centralwidget = QWidget(self)
+        self.setCentralWidget(self.centralwidget)
         self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.resize(700, 450)
         self.mistakes_left_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
@@ -70,11 +71,18 @@ class Test(QMainWindow):
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
         self.label_of_reading.setFont(FONT_20)
+        lcd_timer = QLCDNumber(self)
+        lcd_timer.setGeometry(325, 0, 50, 30)
+        self.timer = Timer(self.all_time, lcd_timer, self)
+        self.timer.start()
+        self.ui_list.extend([self.mistakes_left_label, self.info_label,
+                             self.label_of_reading, self.label_of_element,
+                             lcd_timer])
 
     def create_buttons(self):
         for button in self.buttons:
             button.setParent(None)
-            del button
+        self.buttons = []
         if self.element_type != KANJI:
             x = 150
             for index in range(4):
@@ -138,12 +146,12 @@ class Test(QMainWindow):
                     button.setText(question_elements[index].meaning)
                 button.clicked.connect(
                     lambda: self.check_answer_of_kanji(current_element, self.buttons))
-        self.set_style_and_show_all()
 
     def start_test(self):
         self.continue_button = QPushButton('Продолжить', self)
         self.continue_button.setGeometry(0, 390, 700, 50)
         self.continue_button.clicked.connect(self.continue_test)
+        self.ui_list.append(self.continue_button)
         current_element = next(self.elements_iterator)
         self.create_question(current_element)
         self.set_style_and_show_all()
@@ -167,19 +175,17 @@ class Test(QMainWindow):
             retest_button = QPushButton('Пройти тест заново', self)
             retest_button.setFont(FONT_20)
             retest_button.setGeometry(50, 200, 600, 40)
-            retest_button.clicked.connect(
-                lambda: self.reset())
+            retest_button.clicked.connect(self.reset)
             result_label.setText('Вы не прошли тест')
-        self.continue_button = QPushButton('Продолжить', self)
-        self.continue_button.setFont(FONT_20)
-        self.continue_button.setGeometry(50, 400, 600, 40)
-        self.continue_button.clicked.connect(
-            lambda: self.destroy())
+        continue_button = QPushButton('Продолжить', self)
+        continue_button.setFont(FONT_20)
+        continue_button.setGeometry(50, 400, 600, 40)
+        continue_button.clicked.connect(self.destroy)
         self.set_style_and_show_all()
 
     def reset(self):
         self.__init__(self.element_type, self.elements,
-                      self.is_upgrading_test, self.user, self.parent_widget)
+                      self.upgrade, self.user, self.parent_widget)
 
     def continue_test(self):
         if self.element_type != KANJI:
@@ -193,6 +199,7 @@ class Test(QMainWindow):
             info_text = f'Прав на ошибку осталось {self.permissible_mistakes}'
             self.mistakes_left_label.setText(info_text)
             self.create_question(current_element)
+            self.set_style_and_show_all()
         except StopIteration:
             self.stop_test()
 

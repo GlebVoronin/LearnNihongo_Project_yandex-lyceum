@@ -1,6 +1,6 @@
+import logging
 import os
 import webbrowser
-import logging
 from shutil import copy2
 
 from PIL import Image
@@ -26,12 +26,14 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.current_user = None
         self.path = os.getcwd()  # Путь к текущей папке программы
         self.ui_list = []
-        self.resize(700, 450)
-        self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.setupUi()
         self.set_style_and_show_all()
 
     def setupUi(self):
+        self.resize(700, 450)
+        self.setWindowTitle("Программа для помощи в изучении японского языка")
+        self.centralwidget = QWidget(self)
+        self.setCentralWidget(self.centralwidget)
         start_learn_button = QPushButton("Обучение", self)
         start_learn_button.setGeometry(25, 58, 650, 40)
         start_learn_button.setFont(FONT_14)
@@ -48,6 +50,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         answer_button.setGeometry(25, 352, 650, 40)
         answer_button.setFont(FONT_14)
         answer_button.clicked.connect(self.answer_of_users_questions)
+        self.ui_list.extend(
+            [start_checking_button, start_learn_button, answer_button, setup_button]
+        )
 
     def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE, lesson_number=1):
         """
