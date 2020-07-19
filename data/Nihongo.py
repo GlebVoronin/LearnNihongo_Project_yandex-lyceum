@@ -155,8 +155,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.set_style_and_show_all()
 
     def login_menu(self):
-        ################ bug///////////////////////////////////////////////////////////////////////////////////////////
-        """111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"""
         self.hide()
         register = data.register.LoginRegisterMenu(self)
         register.show()
