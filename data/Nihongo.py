@@ -27,6 +27,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.path = os.getcwd()  # Путь к текущей папке программы
         self.ui_list = []
         self.setupUi()
+        self.login_menu()
         self.set_style_and_show_all()
 
     def setupUi(self):
@@ -53,7 +54,6 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(
             [start_checking_button, start_learn_button, answer_button, setup_button]
         )
-        self.login_menu()
 
     def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE, lesson_number=1):
         """
