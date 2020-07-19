@@ -24,14 +24,14 @@ class LoginRegisterMenu(QMainWindow):
 
     def create_pass_button(self):
         pass_button = QPushButton('Пропустить', self)
-        pass_button.setGeometry(600, 100, 50, 60)
+        pass_button.setGeometry(600, 0, 100, 60)
         pass_button.setFont(FONT_14)
         pass_button.clicked.connect(self.destroy)
         return pass_button
 
     def create_back_button(self, onclick_function):
         back_button = QPushButton('Назад', self)
-        back_button.setGeometry(50, 100, 50, 60)
+        back_button.setGeometry(0, 0, 100, 60)
         back_button.setFont(FONT_14)
         back_button.clicked.connect(onclick_function)
         return back_button
@@ -90,7 +90,7 @@ class LoginRegisterMenu(QMainWindow):
         pass_button = self.create_pass_button()
         back_button = self.create_back_button(self.login_menu)
         info_label = QLabel('Введите свой логин и пароль', self)
-        info_label.setGeometry(50, 40, 600, 40)
+        info_label.setGeometry(100, 40, 500, 40)
         info_label.setFont(FONT_14)
         info_label.setAlignment(Qt.AlignCenter)
 
@@ -125,13 +125,12 @@ class LoginRegisterMenu(QMainWindow):
                              info_repeat_password_label, confirm_button, back_button])
         self.set_style_and_show_all()
 
-
     def login_menu(self):
         self.disable_ui()
         pass_button = self.create_pass_button()
         back_button = self.create_back_button(self.register_menu)
         info_label = QLabel('Введите свой логин и пароль', self)
-        info_label.setGeometry(50, 40, 600, 40)
+        info_label.setGeometry(100, 40, 500, 40)
         info_label.setFont(FONT_14)
         info_label.setAlignment(Qt.AlignCenter)
         info_login_label = QLabel('Логин: ', self)
