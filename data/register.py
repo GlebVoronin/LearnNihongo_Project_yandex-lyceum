@@ -8,8 +8,6 @@ from data.models.users import User
 from data.style import *
 
 
-##############################################доделать
-
 class LoginRegisterMenu(QMainWindow):
     def __init__(self, parent):
         super().__init__(parent, Qt.Window)
@@ -23,6 +21,20 @@ class LoginRegisterMenu(QMainWindow):
         for ui_item in self.ui_list:
             ui_item.setParent(None)
             del ui_item
+
+    def create_pass_button(self):
+        pass_button = QPushButton('Пропустить', self)
+        pass_button.setGeometry(600, 100, 50, 60)
+        pass_button.setFont(FONT_14)
+        pass_button.clicked.connect(self.destroy)
+        return pass_button
+
+    def create_back_button(self, onclick_function):
+        back_button = QPushButton('Назад', self)
+        back_button.setGeometry(50, 100, 50, 60)
+        back_button.setFont(FONT_14)
+        back_button.clicked.connect(onclick_function)
+        return back_button
 
     def set_style_and_show_all(self):
         for ui_object in self.children():
@@ -51,7 +63,7 @@ class LoginRegisterMenu(QMainWindow):
             session.add(user)
             session.commit()
             self.parent().current_user = user
-            self.destroy()
+            self.setParent(None)
 
     def login(self, ui):
         login = ui['login'].text()
@@ -69,12 +81,14 @@ class LoginRegisterMenu(QMainWindow):
                     break
             if found:
                 self.parent().current_user = user
-                self.destroy()
+                self.setParent(None)
             else:
                 ui['info'].setText('Неверный логин или пароль!')
 
     def register_menu(self):
         self.disable_ui()
+        pass_button = self.create_pass_button()
+        back_button = self.create_back_button(self.login_menu)
         info_label = QLabel('Введите свой логин и пароль', self)
         info_label.setGeometry(50, 40, 600, 40)
         info_label.setFont(FONT_14)
@@ -107,12 +121,15 @@ class LoginRegisterMenu(QMainWindow):
               'info': info_label}
         confirm_button.clicked.connect(lambda: self.register(ui))
         self.ui_list.extend(ui.values())
-        self.ui_list.extend([info_login_label, info_password_label,
-                             info_repeat_password_label, confirm_button])
+        self.ui_list.extend([info_login_label, info_password_label, pass_button,
+                             info_repeat_password_label, confirm_button, back_button])
         self.set_style_and_show_all()
+
 
     def login_menu(self):
         self.disable_ui()
+        pass_button = self.create_pass_button()
+        back_button = self.create_back_button(self.register_menu)
         info_label = QLabel('Введите свой логин и пароль', self)
         info_label.setGeometry(50, 40, 600, 40)
         info_label.setFont(FONT_14)
@@ -139,6 +156,6 @@ class LoginRegisterMenu(QMainWindow):
               'info': info_label}
         confirm_button.clicked.connect(lambda: self.login(ui))
         self.ui_list.extend(ui.values())
-        self.ui_list.extend([info_login_label, info_password_label,
-                             register_button, confirm_button])
+        self.ui_list.extend([info_login_label, info_password_label, pass_button,
+                             register_button, confirm_button, back_button])
         self.set_style_and_show_all()
