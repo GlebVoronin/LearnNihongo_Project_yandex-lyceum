@@ -60,11 +60,14 @@ class LoginRegisterMenu(QMainWindow):
             ui['info'].setText('Неверный логин или пароль!')
         else:
             session = db_session.create_session()
-            user = session.query(User).filter(
-                User.login == login,
-                check_password_hash(User.password_hash, password)
-            ).first()
-            if user:
+            users = session.query(User).all()
+            found = False
+            user = None
+            for user in users:
+                if check_password_hash(user.password_hash, password) and user.login == login:
+                    found = True
+                    break
+            if found:
                 self.parent().current_user = user
                 self.destroy()
             else:
