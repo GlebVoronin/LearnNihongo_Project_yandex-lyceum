@@ -53,6 +53,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.ui_list.extend(
             [start_checking_button, start_learn_button, answer_button, setup_button]
         )
+        self.login_menu()
 
     def get_lesson_elements_by_type(self, elements_type, lesson_type=CONTINUE, lesson_number=1):
         """
@@ -154,7 +155,8 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         self.set_style_and_show_all()
 
     def login_menu(self):
-        ################ bug
+        ################ bug///////////////////////////////////////////////////////////////////////////////////////////
+        """111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"""
         self.hide()
         register = data.register.LoginRegisterMenu(self)
         register.show()
@@ -194,7 +196,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         ui = [continue_test_button, past_test_button, hard_test_button,
               number_of_lesson_obj, view_learned_words]
         view_learned_words.clicked.connect(
-            lambda: self.view_learned(type_of_checking, ui))
+            lambda: self.view_learned(type_of_checking))
         self.ui_list.extend(ui)
         self.set_style_and_show_all()
 
