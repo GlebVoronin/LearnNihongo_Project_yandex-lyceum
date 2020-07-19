@@ -102,6 +102,7 @@ class Test(QMainWindow):
                 self.buttons.append(button)
                 if index % 4 == 0:
                     y += 233
+                print(button.geometry())
 
     @staticmethod
     def select_elements_for_question(elements, current_element):
@@ -141,9 +142,9 @@ class Test(QMainWindow):
                 if index < 4:  # кнопки с 0 по 3
                     button.setText(question_elements[index].onyomi_reading)
                 elif index < 8:
-                    button.setText(question_elements[index].kunyomi_reading)
+                    button.setText(question_elements[index % 4].kunyomi_reading)
                 else:
-                    button.setText(question_elements[index].meaning)
+                    button.setText(question_elements[index % 4].meaning)
                 button.clicked.connect(
                     lambda: self.check_answer_of_kanji(current_element, self.buttons))
 
