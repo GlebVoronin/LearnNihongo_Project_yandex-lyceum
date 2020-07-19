@@ -34,24 +34,32 @@ class LoginRegisterMenu(QMainWindow):
             if hasattr(ui_object, 'show'):
                 ui_object.show()
 
-    def login(self, ui, register=False):
+    def register(self, ui):
         login = ui['login'].text()
         password = ui['password'].text()
-        session = db_session.create_session()
-        if register:
-            repeat_password = ui['repeat'].text()
-            if password != repeat_password:
-                ui['info'].setText('Пароли должны совпадать!')
-            else:
-                user = User(
-                    login=login,
-                    password_hash=generate_password_hash(password)
-                )
-                session.add(user)
-                session.commit()
-                self.parent().current_user = user
-                self.destroy()
+        repeat_password = ui['repeat'].text()
+        if password != repeat_password:
+            ui['info'].setText('Пароли должны совпадать!')
+        elif not login or not password:
+            ui['info'].setText('Неверный логин или пароль!')
         else:
+            session = db_session.create_session()
+            user = User(
+                login=login,
+                password_hash=generate_password_hash(password)
+            )
+            session.add(user)
+            session.commit()
+            self.parent().current_user = user
+            self.destroy()
+
+    def login(self, ui):
+        login = ui['login'].text()
+        password = ui['password'].text()
+        if not login or not password:
+            ui['info'].setText('Неверный логин или пароль!')
+        else:
+            session = db_session.create_session()
             user = session.query(User).filter(
                 User.login == login,
                 check_password_hash(User.password_hash, password)
@@ -94,7 +102,7 @@ class LoginRegisterMenu(QMainWindow):
               'password': password_line,
               'repeat': repeat_password_line,
               'info': info_label}
-        confirm_button.clicked.connect(lambda: self.login(ui, register=True))
+        confirm_button.clicked.connect(lambda: self.register(ui))
         self.ui_list.extend(ui.values())
         self.ui_list.extend([info_login_label, info_password_label,
                              info_repeat_password_label, confirm_button])
