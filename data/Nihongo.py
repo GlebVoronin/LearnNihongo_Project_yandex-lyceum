@@ -1,7 +1,7 @@
 import logging
 import os
-import webbrowser
 from shutil import copy2
+import winsound
 
 from PIL import Image
 from PyQt5 import QtCore
@@ -123,6 +123,7 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
         answer_label = QLabel(self)
         answer_label.setAlignment(Qt.AlignTop)
         answer_label.setGeometry(25, 25, 630, 430)
+        # добавить пункт о регистрации!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         text = """
 <font color="black">1) Данна программа позволяет выучить две азбуки японского алфавита,<br>
 слова и кандзи.</font><br>
@@ -344,10 +345,9 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             sound_label.setText('Звук добавлен')
             sound_label.setFont(FONT_14)
 
-    @staticmethod
-    def listen(way_to_sound):
-        """Доработать!!!!!!!!!!!"""
-        webbrowser.open(way_to_sound)
+    def listen(self, way_to_sound):
+        """возможно не работает//////////////////////"""
+        winsound.PlaySound(way_to_sound, winsound.SND_FILENAME)
 
     def save_new_word(self):
         writing = self.line_edit_of_writing.text()

@@ -4,6 +4,8 @@ FONT_14 = QFont()
 FONT_14.setPointSize(14)
 FONT_20 = QFont()
 FONT_20.setPointSize(20)
+FONT_17 = QFont()
+FONT_17.setPointSize(17)
 MAIN_COLORS = {
     'red': [255, 0, 0],
     'green': [0, 255, 0],
