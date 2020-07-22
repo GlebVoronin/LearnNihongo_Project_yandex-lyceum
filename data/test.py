@@ -84,24 +84,25 @@ class Test(QMainWindow):
             button.setParent(None)
         self.buttons = []
         if self.element_type != KANJI:
-            x = 150
+            y = 150
             for index in range(4):
                 button = QPushButton('', self)
-                button.setGeometry(0, x, 700, 50)
-                button.setFont(FONT_20)
-                x += 60
+                button.setGeometry(0, y, 700, 50)
+                button.setFont(FONT_17)
+                y += 60
                 self.buttons.append(button)
         else:
-            x = 150
-            y = 0
+            y = 150
+            x = 0
             for index in range(12):
                 button = QPushButton('', self)
-                button.setGeometry(y, x, 233, 50)
-                button.setFont(FONT_20)
-                x += 60
+                button.setGeometry(x, y, 232, 50)
+                button.setFont(FONT_17)
+                y += 60
                 self.buttons.append(button)
-                if index % 4 == 0:
-                    y += 233
+                if index % 4 == 3:
+                    x += 233
+                    y = 150
                 print(button.geometry())
 
     @staticmethod
@@ -201,6 +202,7 @@ class Test(QMainWindow):
             self.mistakes_left_label.setText(info_text)
             self.create_question(current_element)
             self.set_style_and_show_all()
+            print([b.isVisible() for b in self.buttons])
         except StopIteration:
             self.stop_test()
 
@@ -234,7 +236,7 @@ class Test(QMainWindow):
                     mark_correct_button(button, is_correct=True)
                 else:
                     self.kanji_mistakes += 1
-                    for button in buttons[index]:
+                    for button in buttons[index * 4:(index + 1) * 4]:
                         if button.text() == correct_answers[index]:
                             mark_correct_button(button, is_correct=True)
                         else:
