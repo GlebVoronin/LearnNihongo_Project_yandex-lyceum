@@ -1,4 +1,4 @@
-from random import shuffle, choices
+from random import shuffle, sample
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
@@ -116,7 +116,7 @@ class Test(QMainWindow):
         temporary = set(elements)
         temporary.discard(current_element)
         temporary = list(temporary)
-        wrong_elements = choices(temporary, k=3)
+        wrong_elements = sample(temporary, 3)
         result = (wrong_elements + [current_element])
         shuffle(result)
         return result
