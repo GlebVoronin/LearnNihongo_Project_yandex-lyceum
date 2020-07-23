@@ -139,13 +139,16 @@ class Test(QMainWindow):
                     lambda: self.check_answer(current_element, self.buttons))
         else:
             self.kanji_mistakes = 0
+            onyomi_readings = set(kanji.onyomi_reading for kanji in question_elements)
+            kunyomi_readings = set(kanji.kunyomi_reading for kanji in question_elements)
+            meanings = set(kanji.meaning for kanji in question_elements)
             for index, button in enumerate(self.buttons):
-                if index < 4:  # кнопки с 0 по 3
-                    button.setText(question_elements[index].onyomi_reading)
+                if index < 4:
+                    button.setText(onyomi_readings.pop())
                 elif index < 8:
-                    button.setText(question_elements[index % 4].kunyomi_reading)
+                    button.setText(kunyomi_readings.pop())
                 else:
-                    button.setText(question_elements[index % 4].meaning)
+                    button.setText(meanings.pop())
                 button.clicked.connect(
                     lambda: self.check_answer_of_kanji(current_element, self.buttons))
 
