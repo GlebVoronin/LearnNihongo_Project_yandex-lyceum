@@ -98,12 +98,12 @@ class Test(QMainWindow):
                 button = QPushButton('', self)
                 button.setGeometry(x, y, 232, 50)
                 button.setFont(FONT_17)
+                button.level = index // 4
                 y += 60
                 self.buttons.append(button)
                 if index % 4 == 3:
                     x += 233
                     y = 150
-                print(button.geometry())
 
     @staticmethod
     def select_elements_for_question(elements, current_element):
@@ -202,7 +202,6 @@ class Test(QMainWindow):
             self.mistakes_left_label.setText(info_text)
             self.create_question(current_element)
             self.set_style_and_show_all()
-            print([b.isVisible() for b in self.buttons])
         except StopIteration:
             self.stop_test()
 
@@ -226,22 +225,23 @@ class Test(QMainWindow):
             self.checked = True
 
     def check_answer_of_kanji(self, correct_element, buttons):
-        for index in range(3):
-            correct_answers = {0: correct_element.onyomi_reading,
-                               1: correct_element.kunyomi_reading,
-                               2: correct_element.meaning}
-            if not self.checked[index] and self.can_click:
-                button = self.sender()
-                if button.text() == correct_answers[index]:
-                    mark_correct_button(button, is_correct=True)
-                else:
-                    self.kanji_mistakes += 1
-                    for button in buttons[index * 4:(index + 1) * 4]:
-                        if button.text() == correct_answers[index]:
-                            mark_correct_button(button, is_correct=True)
-                        else:
-                            mark_correct_button(button, is_correct=False)
-                self.checked[index] = True
+        current_level = self.sender().level
+        buttons = [button for button in buttons if button.level == current_level]
+        correct_answers = {0: correct_element.onyomi_reading,
+                           1: correct_element.kunyomi_reading,
+                           2: correct_element.meaning}
+        if not self.checked[current_level] and self.can_click:
+            current_button = self.sender()
+            if current_button.text() == correct_answers[current_level]:
+                mark_correct_button(current_button, is_correct=True)
+            else:
+                self.kanji_mistakes += 1
+                for button in buttons:
+                    if button.text() == correct_answers[current_level]:
+                        mark_correct_button(button, is_correct=True)
+                    else:
+                        mark_correct_button(button, is_correct=False)
+            self.checked[current_level] = True
         if self.kanji_mistakes and all(self.checked):
             self.permissible_mistakes -= 1
             self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
