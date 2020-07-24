@@ -16,10 +16,11 @@ class Test(QMainWindow):
         shuffle(elements)
         self.element_type = element_type
         self.elements = elements
+        self.question_index = 0
         self.parent_widget = parent
         self.user = user
         self.one_element_time = TIME_FOR_ONE_ELEMENT[element_type]
-        self.all_time = self.one_element_time * len(elements)
+        self.all_time = self.one_element_time * len(self.elements)
         self.upgrade = is_upgrading
         # количество допустимых ошибок = кол-во элементов * 1 % * число процентов
         self.permissible_mistakes = int(len(elements) * 0.01 * ERROR_PERCENT_FOR_TEST)
@@ -29,7 +30,6 @@ class Test(QMainWindow):
             self.kanji_mistakes = 0
         self.buttons = []
         self.ui_list = []
-        self.elements_iterator = iter(self.elements)
         self.setupUi()
         self.continue_test()  # запуск теста
 
@@ -56,9 +56,12 @@ class Test(QMainWindow):
         self.setCentralWidget(self.centralwidget)
         self.setWindowTitle("Программа для помощи в изучении японского языка")
         self.resize(700, 450)
-        self.mistakes_left_label = QLabel(f'Прав на ошибку осталось {self.permissible_mistakes}', self)
+        self.mistakes_left_label = QLabel(f'Прав на ошибку осталось: {self.permissible_mistakes}', self)
         self.mistakes_left_label.setGeometry(390, 0, 300, 30)
         self.mistakes_left_label.setFont(FONT_14)
+        self.questions_left_label = QLabel(f'Вопросов осталось: {len(self.elements) - self.question_index}', self)
+        self.questions_left_label.setGeometry(0, 0, 300, 30)
+        self.questions_left_label.setFont(FONT_14)
         info = f'Вам необходимо пройти тест не более чем за {self.all_time} секунд'
         self.info_label = QLabel(info, self)
         self.info_label.setGeometry(50, 30, 600, 30)
@@ -198,14 +201,16 @@ class Test(QMainWindow):
         else:
             if not all(self.checked):
                 self.permissible_mistakes -= 1
-        try:
-            current_element = next(self.elements_iterator)
-            info_text = f'Прав на ошибку осталось {self.permissible_mistakes}'
+        self.question_index += 1
+        if self.question_index == len(self.elements):
+            self.stop_test()
+        else:
+            current_element = self.elements[self.question_index]
+            info_text = f'Прав на ошибку осталось: {self.permissible_mistakes}'
             self.mistakes_left_label.setText(info_text)
+            self.questions_left_label.setText(f'Вопросов осталось: {len(self.elements) - self.question_index}')
             self.create_question(current_element)
             self.set_style_and_show_all()
-        except StopIteration:
-            self.stop_test()
 
     def check_answer(self, correct_element, buttons):
         if isinstance(correct_element, Word):
@@ -218,7 +223,7 @@ class Test(QMainWindow):
                 mark_correct_button(button, is_correct=True)
             else:
                 self.permissible_mistakes -= 1
-                self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
+                self.mistakes_left_label.setText(f'Прав на ошибку осталось: {self.permissible_mistakes}')
                 for button in buttons:
                     if button.text() == correct_answer:
                         mark_correct_button(button, is_correct=True)
@@ -246,7 +251,7 @@ class Test(QMainWindow):
             self.checked[current_level] = True
         if self.kanji_mistakes and all(self.checked):
             self.permissible_mistakes -= 1
-            self.mistakes_left_label.setText(f'Прав на ошибку осталось {self.permissible_mistakes}')
+            self.mistakes_left_label.setText(f'Прав на ошибку осталось: {self.permissible_mistakes}')
 
     def update_progress(self, type_of_learning, user):
         if user:
