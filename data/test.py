@@ -16,7 +16,7 @@ class Test(QMainWindow):
         shuffle(elements)
         self.element_type = element_type
         self.elements = elements
-        self.question_index = 0
+        self.question_index = -1
         self.parent_widget = parent
         self.user = user
         self.one_element_time = TIME_FOR_ONE_ELEMENT[element_type]
@@ -86,7 +86,8 @@ class Test(QMainWindow):
         self.timer.start()
         self.ui_list.extend([self.mistakes_left_label, self.info_label,
                              self.label_of_reading, self.label_of_element,
-                             self.continue_button, self.menu_button, lcd_timer])
+                             self.continue_button, self.menu_button,
+                             self.questions_left_label, lcd_timer])
 
     def create_buttons(self):
         for button in self.buttons:
@@ -195,12 +196,13 @@ class Test(QMainWindow):
                       self.upgrade, self.user, self.parent_widget)
 
     def continue_test(self):
-        if self.element_type != KANJI:
-            if not self.checked:
-                self.permissible_mistakes -= 1
-        else:
-            if not all(self.checked):
-                self.permissible_mistakes -= 1
+        if self.question_index != -1:  # индекс -1 - тест только инициализируется
+            if self.element_type != KANJI:
+                if not self.checked:
+                    self.permissible_mistakes -= 1
+            else:
+                if not all(self.checked):
+                    self.permissible_mistakes -= 1
         self.question_index += 1
         if self.question_index == len(self.elements):
             self.stop_test()
