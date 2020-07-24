@@ -31,7 +31,7 @@ class Test(QMainWindow):
         self.ui_list = []
         self.elements_iterator = iter(self.elements)
         self.setupUi()
-        self.start_test()
+        self.continue_test()  # запуск теста
 
     def disable_ui(self):
         for ui_item in self.ui_list:
@@ -74,13 +74,16 @@ class Test(QMainWindow):
         self.label_of_reading.setGeometry(50, 100, 600, 40)
         self.label_of_reading.setAlignment(Qt.AlignHCenter)
         self.label_of_reading.setFont(FONT_20)
+        self.continue_button = QPushButton('Продолжить', self)
+        self.continue_button.setGeometry(0, 390, 700, 50)
+        self.continue_button.clicked.connect(self.continue_test)
         lcd_timer = QLCDNumber(self)
         lcd_timer.setGeometry(325, 0, 50, 30)
         self.timer = Timer(self.all_time, lcd_timer, self)
         self.timer.start()
         self.ui_list.extend([self.mistakes_left_label, self.info_label,
                              self.label_of_reading, self.label_of_element,
-                             lcd_timer, self.menu_button])
+                             self.continue_button, self.menu_button, lcd_timer])
 
     def create_buttons(self):
         for button in self.buttons:
@@ -154,15 +157,6 @@ class Test(QMainWindow):
                     button.setText(meanings.pop())
                 button.clicked.connect(
                     lambda: self.check_answer_of_kanji(current_element, self.buttons))
-
-    def start_test(self):
-        self.continue_button = QPushButton('Продолжить', self)
-        self.continue_button.setGeometry(0, 390, 700, 50)
-        self.continue_button.clicked.connect(self.continue_test)
-        self.ui_list.append(self.continue_button)
-        current_element = next(self.elements_iterator)
-        self.create_question(current_element)
-        self.set_style_and_show_all()
 
     def stop_test(self, timer=False, prematurely=False):
         if prematurely:
