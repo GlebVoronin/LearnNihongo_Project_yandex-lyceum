@@ -76,11 +76,12 @@ class ProgramLearnJapaneseLanguage(QMainWindow):
             start_id = COUNT_OF_LEARNING * (lesson_number - 1) + 1
         else:  # все уроки, с самого начала
             start_id = 1
-        if lesson_type != NUMERABLE:  # текущий конец
+        if lesson_type == CONTINUE:  # текущий конец
             end_id = COUNT_OF_LEARNING * last_lesson
-        else:  # конец в выбранном уроке
+        elif lesson_type == NUMERABLE:  # конец в выбранном уроке
             end_id = COUNT_OF_LEARNING * lesson_number
-
+        else:  # lesson_type == HARD  все уроки
+            end_id = float('inf')
         class_of_element = CLASSES_BY_TYPES_OF_ELEMENTS.get(elements_type, None)
         if not class_of_element:
             return logging.error('Type of element not found in classes list')
