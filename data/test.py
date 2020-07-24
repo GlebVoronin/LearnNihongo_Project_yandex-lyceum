@@ -63,6 +63,9 @@ class Test(QMainWindow):
         self.info_label = QLabel(info, self)
         self.info_label.setGeometry(50, 30, 600, 30)
         self.info_label.setFont(FONT_14)
+        self.menu_button = QPushButton('Меню', self)
+        self.menu_button.setGeometry(660, 0, 40, 40)
+        self.menu_button.clicked.connect(lambda: self.stop_test(prematurely=True))
         self.label_of_element = QLabel('', self)
         self.label_of_element.setGeometry(50, 70, 600, 40)
         self.label_of_element.setAlignment(Qt.AlignHCenter)
@@ -77,7 +80,7 @@ class Test(QMainWindow):
         self.timer.start()
         self.ui_list.extend([self.mistakes_left_label, self.info_label,
                              self.label_of_reading, self.label_of_element,
-                             lcd_timer])
+                             lcd_timer, self.menu_button])
 
     def create_buttons(self):
         for button in self.buttons:
@@ -161,7 +164,9 @@ class Test(QMainWindow):
         self.create_question(current_element)
         self.set_style_and_show_all()
 
-    def stop_test(self, timer=False):
+    def stop_test(self, timer=False, prematurely=False):
+        if prematurely:
+            self.setParent(None)
         self.timer.end()
         self.disable_ui()
         result_label = QLabel('', self)
